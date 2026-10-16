@@ -1,5 +1,8 @@
 # DriftLens benchmark v0.1
 
+A reproducible benchmark for detecting semantic drift in SQL-based AI agent logs.
+
+
 Scenario A only: large_orders changes from >= 2000 to >= 3000 integer cents.
 Adapted from the existing 2026-10-16 generator prototype; the original files and
 four tests were preserved. Python 3.11+, standard library only for execution.
