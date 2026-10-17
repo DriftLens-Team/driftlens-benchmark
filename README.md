@@ -1,72 +1,148 @@
-# DriftLens benchmark v0.1
+# DriftLens Benchmark
 
-A reproducible benchmark for detecting semantic drift in SQL-based AI agent logs.
+[English](README.md) | [한국어](README.ko.md)
 
+Generate reproducible, SQL-grounded logs for research on changes in business definitions. Scenario A changes the definition of `large_orders` from orders worth at least 2,000 integer cents to at least 3,000 cents.
 
-Scenario A only: large_orders changes from >= 2000 to >= 3000 integer cents.
-Adapted from the existing 2026-10-16 generator prototype; the original files and
-four tests were preserved. Python 3.11+, standard library only for execution.
+## Features
 
-## Run (PowerShell)
+- Load CSV or JSONL orders and calculate weekly counts with SQLite.
+- Produce Korean answers using a deterministic template or an Upstage model.
+- Keep public observations separate from private labels, failures, and run metadata.
+- Validate answer numbers against the executed SQL result and reject common definition-leakage terms.
+- Provide a strict public-log loader and a bounded, read-only SQLite tool for the companion agent.
+
+## Requirements and quick start
+
+Python 3.11 or later. Local template execution uses the Python standard library. Run these commands from the repository root in PowerShell:
+
 ```powershell
 python -m unittest -v
 python generate.py --orders data/fixture_orders.csv --start 2025-01-06 --weeks 2 --out runs/demo
 ```
-Expected template-only counts: 3 and 2. This is an eight-row synthetic fixture,
-not full jaffle-shop, and template output is not LLM-generated benchmark data.
-CSV and JSONL orders accept `id`, `ordered_at`, `order_total` (integer cents).
-Timezone-aware timestamps normalize to UTC; naive inputs are assumed UTC.
-The CLI conservatively requires the requested full weeks within the source date span.
-Use a new output directory per run; existing results are never overwritten.
 
-For genuine answer generation, set `UPSTAGE_API_KEY` externally and
-`UPSTAGE_MODEL` to an account-supported model, then add `--mode llm`.
-`--model` can override the model environment variable. No API calls were made
-in this implementation session. Do not commit credentials or generated runs.
-Fake HTTP responses test the transport contract, not provider compatibility or quality.
+The eight-row synthetic fixture produces counts of **3 and 2** with the default change date, 2025-01-15. It is not the full jaffle-shop dataset. Template answers are not LLM-generated data.
 
-## Contract and isolation
-`logs.jsonl` contains exactly ten flat top-level fields: log_id, timestamp,
-agent_id, team, request, sql, answer_text, definition_note, reported_values,
-referenced_concepts. reported_values is an array of concept_id/value/period objects.
-`truth.jsonl` has log_id, ontology_version_used, drift_id, contaminated.
-`run.private.json` records input SHA256, thresholds, effective date, model/mode,
-UTC rules and success/failure counts. Failed answers go to
-`failures.private.jsonl`, never silently corrected. The CLI exits 1 on generation failures.
-`orders.sqlite` is a source-only SQL tool snapshot; it contains no labels or ontology.
+Choose a new output directory for each run; an existing directory is rejected. The requested full weeks must fit within the source date span.
 
-Weeks are [Monday 00:00 UTC, next Monday 00:00 UTC), with Sunday 23:59:59
-conversation timestamps. One version applies to the whole week, selected at that
-timestamp. Change date starts at UTC midnight; Jan 15 makes 2025-W03 v2.
-Pre-change truth is v1/null/false; post-change truth is v2/A/true.
-Contaminated means changed relative to v1, not a computation error.
+For model-generated answers, configure `UPSTAGE_API_KEY` and `UPSTAGE_MODEL` externally and add `--mode llm` to the generation command. `--model` overrides the model environment variable. Use a model supported by your account. Live provider compatibility and answer quality remain unverified; mocked HTTP tests do not establish them. Keep credentials and generated private data out of version control.
 
-`public_logs.load_public` accepts only logs.jsonl with exact public keys and
-strict nested value fields, rejecting private files, unexpected fields and duplicates.
-Only L3 is implemented. Pass only public records to detector code; never mount
-truth or run metadata into its environment. The reader is not an OS access control
-or a proof that arbitrary text contains no semantic leakage.
+## Use the external CSV
 
-reported_values always represents the executed SQL, not an independent current-policy
-oracle. Stale-definition SQL observations are valid observations and must not be
-filtered for differing from a current-policy count. The default Scenario A generator
-follows the active version; stale SQL is exercised in the separate agent test.
-The answer validator compares against that actual query result and checks numbers
-and common leakage terms; semantic paraphrases still need human review.
+The bundled fixture is enough for a first run. To use the external synthetic data, follow these steps from the **benchmark repository root** in PowerShell.
 
-## Provenance and limits
-The implementation extends the original Scenario A prototype and its four tests.
-The complete runnable v0.1 contract is documented above; no internal document
-access is required. This repository provides reproducible inputs for semantic
-drift detection research, not a completed detector or scoring system.
+![CSV setup: upstream data to local CSV, benchmark outputs, and sibling repository layout](docs/assets/data-flow.png)
 
-12 tests cover original behavior, JSONL equivalence, UTC/ISO year/week boundaries,
-change-day inclusion, reproducibility, fake LLM responses, leakage rejection,
-public/private boundary, stale SQL, and read-only SQL budgets.
-Full jaffle-shop execution, live LLM/model access, change detection and scoring
-are unverified or outside scope. Numeric extraction capability is not evaluated.
+*Setup diagram, not an execution screenshot. The agent consumes the generated public log and SQLite snapshot; it does not load CSV directly.*
 
+### 1. Identify the source and version
 
-## 향후 구조 (문서·주석 전용)
+The source is [dbt-labs/jaffle-shop](https://github.com/dbt-labs/jaffle-shop/blob/5beb145b00f5465ec759cfcdd9745e858818cf95/README.md), a fictional-shop dbt sandbox. This guide pins commit [`5beb145b00f5465ec759cfcdd9745e858818cf95`](https://github.com/dbt-labs/jaffle-shop/commit/5beb145b00f5465ec759cfcdd9745e858818cf95) and its [`seeds/jaffle-data/raw_orders.csv`](https://github.com/dbt-labs/jaffle-shop/blob/5beb145b00f5465ec759cfcdd9745e858818cf95/seeds/jaffle-data/raw_orders.csv). Avoid a moving `main` URL when reproducing an experiment.
 
-[구조와 구현 상태](docs/README.md)에 폴더 역할과 설정 예시를 정리했다. 새 Python 파일은 주석만 있으며 신규 기능을 실행하지 않는다. 기존 실행 코드·테스트·import는 그대로다. 두 저장소를 JSONL 별도 프로세스로 연결하는 방식은 향후 목표이며, 현재 agent는 benchmark 유틸리티를 import하는 SQL replay다.
+Only that CSV is needed. Do not clone or run the upstream dbt project for this path; no dbt Cloud, warehouse, or upstream dependency installation is required. Download the raw CSV, not the GitHub HTML page.
+
+**Source and license:** the pinned repository tree contains no license file, and GitHub reports no detected repository license. A separate data license could not be confirmed. Public availability is not a verified redistribution grant; check permission with the upstream project for your intended reuse. This repository links to the source and does not redistribute its CSV. DriftLens's Apache-2.0 license does not establish a license for that external data.
+
+### 2. Download into the expected location
+
+Map upstream `seeds/jaffle-data/raw_orders.csv` to local `driftlens-benchmark/data/raw_orders.csv`. Keep the original header and values; no conversion is required for this pinned raw file. The local path is already ignored by Git.
+
+```powershell
+$sourceCommit = '5beb145b00f5465ec759cfcdd9745e858818cf95'
+$sourceUrl = "https://raw.githubusercontent.com/dbt-labs/jaffle-shop/$sourceCommit/seeds/jaffle-data/raw_orders.csv"
+if (Test-Path -LiteralPath 'data/raw_orders.csv') { throw 'data/raw_orders.csv already exists; verify or choose another filename.' }
+Invoke-WebRequest -Uri $sourceUrl -OutFile 'data/raw_orders.csv'
+Get-Content -LiteralPath 'data/raw_orders.csv' -TotalCount 1
+Get-FileHash -LiteralPath 'data/raw_orders.csv' -Algorithm SHA256
+```
+
+The expected header is:
+
+```text
+id,customer,ordered_at,store_id,subtotal,tax_paid,order_total
+```
+
+Expected SHA256: `E8EE89233D417FD695D016588649C008D930110D50027480BB95B443EC0DC76B`. A mismatch means the bytes differ: verify the URL and file before using it. Keep the source commit and hash with your experiment notes; the generator also records its input SHA256 in private run metadata.
+
+The pinned file has 61,948 rows dated 2024-09-01 through 2025-08-31. Its header, date span, and hash were checked; full benchmark execution on this file remains unverified.
+
+### 3. Check the columns and run
+
+| Raw CSV column | Required local meaning |
+| --- | --- |
+| `id` | Unique order identifier; loaded as SQLite `order_id` |
+| `ordered_at` | ISO timestamp; normalized to a UTC date |
+| `order_total` | Integer cents; loaded as `order_total_cents` |
+| Other columns | Accepted but not used by this loader |
+
+The raw timestamps have no offset, so DriftLens treats them as UTC. The upstream [staging SQL](https://github.com/dbt-labs/jaffle-shop/blob/5beb145b00f5465ec759cfcdd9745e858818cf95/models/staging/stg_orders.sql) also produces dollar-valued columns; **do not substitute its dollar `order_total` for the raw cents field**. The current loader has no configurable CSV renaming or currency conversion.
+
+```powershell
+python generate.py --orders data/raw_orders.csv --start 2025-01-06 --weeks 2 --effective-at 2025-01-15 --out runs/jaffle-demo
+```
+
+This uses template mode, a Monday start, and two complete weeks inside the checked date span. Choose an unused output directory. On success, expect two public log records, two matching private truth records, an empty failure file, run metadata, and `orders.sqlite` under `runs/jaffle-demo/`. External-data counts differ from the fixture's 3 and 2; no external-data count is claimed here.
+
+### 4. Troubleshoot setup
+
+| Symptom | Check |
+| --- | --- |
+| CSV not found | Run from the benchmark root; confirm `data/raw_orders.csv` exists, or pass its actual path to `--orders`. |
+| Missing columns / CSV parsing error | Download the raw file, not HTML; keep `id, ordered_at, order_total`. Other datasets need preparation outside this loader. |
+| Non-integer amount or unexpected counts | Use raw integer cents, not staging dollars; v1/v2 thresholds are 2,000/3,000 cents. |
+| Date-range or Monday error | Use a Monday and complete weeks within the source span. The example above fits the pinned file. |
+| Output directory already exists | Pick a new `--out` directory; do not delete results merely to rerun. |
+| Agent cannot import benchmark modules | Use sibling checkouts and the agent README's `PYTHONPATH` or local package installation instructions. |
+| Agent cannot open its inputs | Generate first, then point both `--logs` and `--db` to the same run directory. |
+
+## Inputs and outputs
+
+Input orders require `id`, `ordered_at`, and `order_total`. Amounts are **integer cents**, not dollars. Timestamps with time zones normalize to UTC; naive timestamps are treated as UTC.
+
+| Output | Contents and access |
+| --- | --- |
+| `logs.jsonl` | Public L3 observations |
+| `truth.jsonl` | Private labels joined by `log_id` |
+| `run.private.json` | Private input hash, thresholds, change date, mode/model, time rules, and success/failure counts |
+| `failures.private.jsonl` | Private generation failures; failed answers are not silently corrected |
+| `orders.sqlite` | Source-only order snapshot without truth or ontology labels |
+
+Generation failures cause exit code 1. The public log has exactly ten top-level fields:
+
+```text
+log_id, timestamp, agent_id, team, request, sql, answer_text,
+definition_note, reported_values, referenced_concepts
+```
+
+`reported_values` contains concept/value/ISO-week observations from the actual SQL result. It is not an independent oracle for the latest business definition. A stale-definition query remains a valid observation.
+
+Weeks run from Monday 00:00 UTC inclusive to the next Monday exclusive. The conversation timestamp is Sunday 23:59:59 UTC, and its active definition applies to the whole week. Changes start at UTC midnight; a 2025-01-15 change applies v2 to 2025-W03.
+
+Private truth contains `log_id`, `ontology_version_used`, `drift_id`, and `contaminated`. Before the change these labels are v1/null/false; afterward they are v2/A/true. `contaminated` means a definition change relative to v1, not a SQL error or hallucination.
+
+See the [contract](contracts/v1/README.md) for field rules and planned detection interfaces. Detectors must receive only permitted public logs and baseline v1, never private labels, future definitions, actual profiles, or change times. File separation and the public loader do not replace process-level access controls. L3 deliberately exposes SQL and definition clues.
+
+## Repository structure
+
+| Path | Role |
+| --- | --- |
+| `generate.py`, `driftlens.py` | Generation CLI and implementation |
+| `public_logs.py`, `sql_tool.py` | Public input validation and read-only SQLite |
+| `data/`, `test_*.py` | Synthetic fixture and offline tests |
+| `contracts/`, `docs/` | Contracts and architecture |
+| `datasets/`, `scenarios/`, `configs/` | Dataset/scenario documentation and planned configuration examples |
+| `src/` | Comment-only placeholders for orchestration, adapter, logging, detection, and evaluation |
+
+Read the [architecture guide (Korean)](docs/README.md) for module responsibilities, independent version tracking, and information boundaries.
+
+## Companion agent and current status
+
+[DriftLens SQL Agent](https://github.com/DriftLens-Team/driftlens-sql-agent) replays SQL from these public logs against the snapshot and checks answer consistency. It currently imports this repository's loader, SQL tool, and validator. It does not independently generate SQL from a question.
+
+A separate-process JSONL connection, external profile-driven engine, L0–L2 projections, fixed-definition control execution, drift detection, and scoring are planned, not implemented. Configuration examples are not read by the current CLI.
+
+Offline tests cover boundaries, reproducibility, mocked model responses, public/private separation, and SQL restrictions. Full jaffle-shop execution and live model behavior remain unverified. Numeric extraction ability is not evaluated, and automated answer checks do not rule out all semantic leakage.
+
+## License
+
+[Apache License 2.0](LICENSE)
