@@ -65,3 +65,8 @@ change-day inclusion, reproducibility, fake LLM responses, leakage rejection,
 public/private boundary, stale SQL, and read-only SQL budgets.
 Full jaffle-shop execution, live LLM/model access, change detection and scoring
 are unverified or outside scope. Numeric extraction capability is not evaluated.
+
+
+## 향후 구조 (문서·주석 전용)
+
+[구조와 구현 상태](docs/README.md)에 폴더 역할과 설정 예시를 정리했다. 새 Python 파일은 주석만 있으며 신규 기능을 실행하지 않는다. 기존 실행 코드·테스트·import는 그대로다. 두 저장소를 JSONL 별도 프로세스로 연결하는 방식은 향후 목표이며, 현재 agent는 benchmark 유틸리티를 import하는 SQL replay다.

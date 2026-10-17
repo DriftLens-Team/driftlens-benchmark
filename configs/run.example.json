@@ -1,0 +1,17 @@
+{
+  "scenario": "A_definition_change",
+  "agent_repository": "../driftlens-sql-agent",
+  "dataset": "data/fixture_orders.csv",
+  "timezone": "UTC",
+  "start": "2025-01-06",
+  "weeks": 2,
+  "effective_at": "2025-01-15T00:00:00Z",
+  "profiles": {
+    "before": "../driftlens-sql-agent/profiles/v1/profile.example.json",
+    "after": "../driftlens-sql-agent/profiles/v2/profile.example.json"
+  },
+  "detector_input": [
+    "logs.jsonl",
+    "baseline-v1.json"
+  ]
+}
