@@ -1,0 +1,4 @@
+version: 1
+suite: ../../benchmarks/suites/smoke.yaml
+agent: ../agents/sql-agent-v1.yaml
+seed: 17

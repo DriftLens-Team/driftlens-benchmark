@@ -1,0 +1,6 @@
+version: 1
+dataset_id: jaffle-shop-c03-synthetic
+schema_version: orders-v1
+orders: fixtures/orders.csv
+schema: schema.sql
+source_lock: source.lock.json

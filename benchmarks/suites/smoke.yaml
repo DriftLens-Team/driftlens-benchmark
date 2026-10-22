@@ -1,0 +1,10 @@
+version: 1
+suite_id: c03-smoke
+case: ../cases/C03_large_orders/case.yaml
+dataset: ../../datasets/jaffle_shop/dataset.yaml
+start: "2025-01-06"
+weeks: 2
+effective_at: "2025-01-13"
+control: true
+level: L3
+split: development

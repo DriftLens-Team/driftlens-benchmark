@@ -1,0 +1,14 @@
+{
+  "v1": {
+    "concept_id": "large_orders",
+    "comparison": ">=",
+    "threshold": 2000,
+    "amount_unit": "integer_cents"
+  },
+  "v2": {
+    "concept_id": "large_orders",
+    "comparison": ">=",
+    "threshold": 3000,
+    "amount_unit": "integer_cents"
+  }
+}

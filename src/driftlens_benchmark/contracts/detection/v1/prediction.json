@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "log_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "result_id": {
+      "const": "r1"
+    },
+    "concept_id": {
+      "const": "large_orders"
+    },
+    "decision": {
+      "enum": [
+        "drift",
+        "no_drift",
+        "abstain"
+      ]
+    },
+    "evidence_log_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "evidence_summary": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "required": [
+    "log_id",
+    "result_id",
+    "concept_id",
+    "decision",
+    "evidence_log_ids",
+    "evidence_summary"
+  ],
+  "additionalProperties": false
+}

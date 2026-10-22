@@ -1,0 +1,23 @@
+{
+  "description": "Hand-calculated synthetic counts, not measured model performance.",
+  "periods": {
+    "2025-W02": {
+      "v1": 3,
+      "v2": 1
+    },
+    "2025-W03": {
+      "v1": 4,
+      "v2": 2
+    }
+  },
+  "boundary_amounts": [
+    1900,
+    2000,
+    2500,
+    3000
+  ],
+  "boundary_counts": {
+    "v1": 3,
+    "v2": 1
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "contract_version": {
+      "const": "records/v2"
+    },
+    "level": {
+      "const": "L3"
+    },
+    "files": {
+      "type": "object",
+      "properties": {
+        "baseline.json": {
+          "type": "string",
+          "minLength": 1
+        },
+        "logs.jsonl": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "baseline.json",
+        "logs.jsonl"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "contract_version",
+    "level",
+    "files"
+  ],
+  "additionalProperties": false
+}

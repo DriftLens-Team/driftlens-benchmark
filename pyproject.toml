@@ -1,12 +1,35 @@
 [build-system]
-requires = ["setuptools>=61"]
+requires = ["setuptools>=77,<81"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "driftlens-benchmark"
-version = "0.1.0"
+version = "0.2.0.dev0"
+readme = "README.md"
 requires-python = ">=3.11"
-description = "Scenario A SQL-grounded definition drift fixtures"
+description = "Reproducible semantic drift environments, agent integration and evaluation"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+dependencies = ["PyYAML>=6,<7", "jsonschema>=4.23,<5", "sqlglot>=30.24,<31"]
 
-[tool.setuptools]
-py-modules = ["driftlens", "public_logs", "sql_tool"]
+[project.optional-dependencies]
+dev = ["pytest>=8,<10", "ruff>=0.11,<1", "build>=1,<2"]
+
+[project.scripts]
+driftlens-benchmark = "driftlens_benchmark.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+driftlens_benchmark = ["contracts/**/*.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["companion: requires the separately installed driftlens-sql-agent package"]
+
+[tool.ruff]
+line-length = 110
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I"]

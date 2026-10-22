@@ -1,0 +1,8 @@
+version: 1
+protocol: agent/v1
+command: ["{python}", "-m", "driftlens_sql_agent"]
+provider: fake
+timeout_seconds: 75
+capabilities: [large_orders, weekly, orders-v1]
+model_id_env: UPSTAGE_MODEL
+api_key_env: UPSTAGE_API_KEY

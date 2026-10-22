@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "protocol": {
+      "const": "agent/v1"
+    },
+    "command": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1
+    },
+    "provider": {
+      "enum": [
+        "fake",
+        "upstage"
+      ]
+    },
+    "timeout_seconds": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 300
+    },
+    "capabilities": {
+      "const": [
+        "large_orders",
+        "weekly",
+        "orders-v1"
+      ]
+    },
+    "model_id_env": {
+      "type": "string",
+      "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+    },
+    "api_key_env": {
+      "type": "string",
+      "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+    }
+  },
+  "required": [
+    "version",
+    "protocol",
+    "command",
+    "provider",
+    "timeout_seconds",
+    "capabilities",
+    "model_id_env",
+    "api_key_env"
+  ],
+  "additionalProperties": false
+}

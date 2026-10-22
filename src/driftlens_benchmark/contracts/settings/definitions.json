@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "v1": {
+      "type": "object",
+      "properties": {
+        "concept_id": {
+          "const": "large_orders"
+        },
+        "comparison": {
+          "const": ">="
+        },
+        "threshold": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854776000
+        },
+        "amount_unit": {
+          "const": "integer_cents"
+        }
+      },
+      "required": [
+        "concept_id",
+        "comparison",
+        "threshold",
+        "amount_unit"
+      ],
+      "additionalProperties": false
+    },
+    "v2": {
+      "type": "object",
+      "properties": {
+        "concept_id": {
+          "const": "large_orders"
+        },
+        "comparison": {
+          "const": ">="
+        },
+        "threshold": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854776000
+        },
+        "amount_unit": {
+          "const": "integer_cents"
+        }
+      },
+      "required": [
+        "concept_id",
+        "comparison",
+        "threshold",
+        "amount_unit"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "v1",
+    "v2"
+  ],
+  "additionalProperties": false
+}

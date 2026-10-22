@@ -1,0 +1,64 @@
+version: 1
+source: https://docs.google.com/spreadsheets/d/1Cb72YOTOXoL8SKgs7ulR0KI9WT5WsE04RsISl_SBcqA/edit?gid=1475341752
+cases:
+  - case_id: C01
+    concept_id: repeat_customers
+    status: blocked_data
+  - case_id: C02
+    concept_id: new_customers
+    status: blocked_data
+  - case_id: C03
+    concept_id: large_orders
+    status: validated
+    path: cases/C03_large_orders/case.yaml
+  - case_id: C04
+    concept_id: average_order_value
+    status: candidate
+  - case_id: C05
+    concept_id: food_orders
+    status: candidate
+  - case_id: C06
+    concept_id: repeat_purchase_rate
+    status: candidate
+  - case_id: C07
+    concept_id: popular_products
+    status: candidate
+  - case_id: C08
+    concept_id: food_revenue
+    status: candidate
+  - case_id: C09
+    concept_id: food_share
+    status: candidate
+  - case_id: C10
+    concept_id: order_cost
+    status: candidate
+  - case_id: C11
+    concept_id: profitable_products
+    status: candidate
+  - case_id: C12
+    concept_id: cumulative_revenue
+    status: candidate
+  - case_id: C13
+    concept_id: revenue_growth
+    status: candidate
+  - case_id: C14
+    concept_id: monthly_customer_revenue
+    status: candidate
+  - case_id: C15
+    concept_id: average_tax_rate
+    status: candidate
+  - case_id: I1
+    concept_id: orders
+    status: candidate
+  - case_id: I2
+    concept_id: active_customers
+    status: candidate
+  - case_id: I3
+    concept_id: small_orders
+    status: candidate
+  - case_id: I4
+    concept_id: items_sold
+    status: candidate
+  - case_id: I5
+    concept_id: beverage_orders
+    status: candidate

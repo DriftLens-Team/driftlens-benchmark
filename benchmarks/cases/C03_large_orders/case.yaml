@@ -1,0 +1,9 @@
+version: 1
+case_id: C03
+concept_id: large_orders
+definitions: definitions.json
+questions: questions.ko.jsonl
+references:
+  v1: reference/v1.sql
+  v2: reference/v2.sql
+assertions: assertions.json

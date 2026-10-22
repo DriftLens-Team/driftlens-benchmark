@@ -1,0 +1,8 @@
+{
+  "dataset_id": "jaffle-shop-c03-synthetic",
+  "provenance": "Self-authored synthetic eight-order fixture; preserved from the original benchmark. Not upstream CSV.",
+  "files": {
+    "orders": "feddeb11478f76f702fdd410fe7fed4110c233b8984a7d1f33857a1ef0cd38b8",
+    "schema": "aee2099c2d3000348dcfdea2a4a113ec60c7cb764e46b21aaf4cc23680a31677"
+  }
+}

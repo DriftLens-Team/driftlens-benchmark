@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "case_id": {
+      "const": "C03"
+    },
+    "concept_id": {
+      "const": "large_orders"
+    },
+    "definitions": {
+      "type": "string",
+      "minLength": 1
+    },
+    "questions": {
+      "type": "string",
+      "minLength": 1
+    },
+    "references": {
+      "type": "object",
+      "properties": {
+        "v1": {
+          "type": "string",
+          "minLength": 1
+        },
+        "v2": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "v1",
+        "v2"
+      ],
+      "additionalProperties": false
+    },
+    "assertions": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "required": [
+    "version",
+    "case_id",
+    "concept_id",
+    "definitions",
+    "questions",
+    "references",
+    "assertions"
+  ],
+  "additionalProperties": false
+}
