@@ -6,4 +6,4 @@ jsonl.py는 외부 프로세스를 호출한다. 요청마다 프로세스를 �
 
 command는 인자 배열이며 shell을 사용하지 않는다. timeout은 이 요청에서 시작한 process tree를 종료한다. companion 내부 모듈을 import하지 않는다.
 
-파일 제출/HTTP 어댑터와 상시 세션 재사용은 미구현이다. 현재 외부 챗봇은 [연결 안내](../../../docs/connecting-an-agent.md)의 프로세스 계약을 따른다.
+외부 에이전트는 [연결 안내](../../../docs/connecting-an-agent.md)의 프로세스 계약을 따른다.

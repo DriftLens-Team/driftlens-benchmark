@@ -30,6 +30,6 @@
 
 음성 abstain은 TN으로 세지 않는다. F1과 precision의 분모가 각각 0이면 null이다. 예를 들어 항상 no_drift인 기준선은 precision=null, 양성 1건을 놓치므로 recall=0/F1=0이다. macro는 케이스별 정의된 값의 평균이며 현재 C03 하나만 있다.
 
-실제 변경일, 최초 관측 가능 시점, 최초 경보 시점은 다른 개념이다. 이번에는 시간 지연 점수를 구현하지 않았으며 temporal.score=null과 사유를 보고한다.
+시간 지연 점수는 지원하지 않는다. temporal.score=null과 사유를 보고한다.
 
 기본 smoke는 development split·합성 fixture·fake model·로컬 unisolated 환경이다. 점수 1.0을 실제 LLM이나 미지 케이스에 일반화하지 않는다.

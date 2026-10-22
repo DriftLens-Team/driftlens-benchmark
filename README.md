@@ -6,7 +6,7 @@ English | [한국어](README.ko.md)
 
 C03 changes the “large order” threshold from 2,000 to 3,000 cents while a paired control keeps 2,000 cents. Correct calculations can reflect a changed definition; changing counts can also reflect unchanged definitions.
 
-Implemented: **C03 generation → external JSONL SQL agent → observation validation → public L3 bundle → detection → scoring**. The initial database has three columns. Six-table datasets, additional cases, L0–L2 and OS-isolated execution remain future work.
+The pipeline generates a SQLite database, runs an external SQL agent, validates its answers and queries, and scores drift predictions. It currently supports C03 and the L3 observation format.
 
 ## Quick start
 
@@ -24,20 +24,20 @@ python -m venv .venv
 
 On Linux/macOS use `.venv/bin/python`. An activated environment also exposes `driftlens-benchmark`. See [contributing](CONTRIBUTING.md) for lockfile-based installation.
 
-Outputs are never overwritten: use a new `--out` for each run. The agent can be installed anywhere; no sibling checkout or cross-repository imports are required. See [agent integration](docs/connecting-an-agent.md).
+Use a new `--out` directory for each run. See [agent integration](docs/connecting-an-agent.md) to connect another agent.
 
 ## Expected smoke results
 
-Eight self-authored synthetic orders produce four observations across two weeks and two arms.
+Eight synthetic orders produce four observations across two weeks and two arms.
 
 | Arm | 2025-W02 | 2025-W03 | Drift label |
 | --- | --- | --- | --- |
 | Changed definition | 3 | 2 | false → true |
 | Fixed definition | 3 | 4 | false → false |
 
-The SQL-rule baseline should produce TP=1, TN=3, FP=0, FN=0. This is a **fake-provider integration check**, not a claim about live LLM performance. A `no-drift` baseline is also available.
+The `sql-rules` baseline should produce TP=1, TN=3, FP=0, FN=0 with the fake provider. These results verify the integration pipeline; live LLM performance is not measured. A `no-drift` baseline is also available.
 
-Reports appear under `runs/demo/reports/sql-rules/` as `report.md` and `metrics.json`. Generation errors, rejected/unverified observations and abstentions remain separate. Partial runs require explicit opt-in for scoring.
+Reports appear under `runs/demo/reports/sql-rules/` as `report.md` and `metrics.json`. See [evaluation](docs/evaluation.md) for scoring and failure handling.
 
 ## Repository map
 
@@ -52,21 +52,16 @@ Reports appear under `runs/demo/reports/sql-rules/` as `report.md` and `metrics.
 | [docs/](docs/README.md) | Usage, extensions, evaluation and migration |
 | `runs/` | Generated DBs, truth, public observations, predictions and reports; ignored by Git |
 
-## Data boundaries
+## Scope
 
-The agent receives a snapshot cut off at the reporting horizon and only its selected current definition. Public observations are projected from private truth using a nested allowlist. Detection reads the public bundle and baseline; evaluation joins private labels.
+The agent receives a weekly snapshot and the current definition. Detectors read public observations and the baseline; the evaluator joins private labels.
 
-This is **local unisolated development execution**. Directory separation is not OS access control. The SQL recognizer supports a conservative COUNT/range/threshold subset and abstains outside it. See [evaluation rules](docs/evaluation.md).
+Execution is local, without an OS sandbox. SQL validation supports COUNT queries with date ranges and amount thresholds; unsupported expressions are marked unverified. See [architecture](docs/architecture.md).
 
-## Test and contribute
+## Contributing
 
-```powershell
-.venv/Scripts/python.exe -m pytest -q
-.venv/Scripts/python.exe -m ruff check src tests examples
-```
-
-The companion integration test runs when its package is installed and explicitly skips otherwise. Default tests never call a live model. See [adding a case](docs/adding-a-case.md), [connecting an agent](docs/connecting-an-agent.md), and [migration](docs/migration.md).
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and tests, [adding a case](docs/adding-a-case.md) for benchmark contributions, and [migration](docs/migration.md) for upgrading from the root scripts.
 
 ## License
 
-[Apache-2.0](LICENSE) for code and self-authored fixtures. Upstream Jaffle Shop CSVs are not redistributed. Their provenance and redistribution rights must be checked separately from this project's code license.
+[Apache-2.0](LICENSE) for code and included synthetic fixtures. External datasets retain their own licenses.

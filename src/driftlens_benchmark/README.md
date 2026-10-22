@@ -14,4 +14,4 @@
 | [detectors/](detectors/README.md) | SQL 규칙 및 no-drift 기준선 |
 | [evaluation/](evaluation/README.md) | 정답 결합·coverage·점수·보고서 |
 
-현재 C03과 agent v1만 지원한다. 일반화되지 않은 케이스를 runner 분기로 늘리지 않는다. SQL 생성·공급자 API·prompt는 외부 agent에 둔다.
+C03과 agent/v1을 지원한다. SQL 생성·공급자 API·prompt는 외부 agent가 담당한다.

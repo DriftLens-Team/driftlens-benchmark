@@ -11,6 +11,6 @@
 
 파일 구조는 [C03](../benchmarks/cases/C03_large_orders/README.md)을 따른다. 현행 settings schema는 C03/large_orders만 허용하므로 YAML만 추가한다고 새 case가 동작하지 않는다.
 
-C05·C08·C10·I1·I2·I4·I5는 6개 테이블 확장 후보, C04/I3는 약한 신호 후보다. C01/C02는 추가 합성 이력이 필요하다. ranking/ratio/cohort와 공간적 정의 혼용은 별도 결과형·평가 규칙이 필요하다.
+후보별 요구 데이터와 상태는 [catalog](../benchmarks/catalog.yaml)에서 확인한다.
 
 정의가 다르지만 숫자가 같은 샘플을 별도로 검사한다. SQL 숫자 일치가 의미 동등성의 증거를 대체하지 않는다.

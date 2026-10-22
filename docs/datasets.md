@@ -8,6 +8,6 @@
 
 파일 checksum이 달라졌는데 같은 lock을 유지하면 validate/run이 실패한다. 원천과 schema를 바꿀 때 의미·단위·결과 기대값도 재검증해야 한다. 외부 source에 fixture의 3/2/3/4 건수를 기대하지 않는다.
 
-현재 3컬럼 agent DB에는 order_id, ordered_at, order_total_cents만 있다. 향후 6개 테이블로 확장할 때는 공통 정규화 DB와 agent v1 호환 projection을 분리한다. 현재는 두 DB를 중복 생성하지 않고 필요한 3컬럼 snapshot만 만든다.
+agent DB에는 order_id, ordered_at, order_total_cents 세 컬럼이 있다.
 
 SQL 방언은 SQLite다. 외부 원천의 재배포 권한을 프로젝트 코드 라이선스에서 추론하지 않는다.

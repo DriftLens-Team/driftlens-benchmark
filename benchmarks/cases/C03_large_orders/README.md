@@ -14,4 +14,4 @@ smoke fixture에서는 첫 주 v1=3/v2=1, 둘째 주 v1=4/v2=2다. 변경군은 
 
 현재 관측은 주간 정수 건수만 지원한다. SQL은 실제 실행 결과와 답변을 검수한 뒤 공개한다. 지원하지 않는 의미 구조는 ‘정답 SQL과 같은 숫자’여도 검증 완료로 처리하지 않는다.
 
-기존 Scenario A를 계승한다. 원본 후보는 [Drifts Data v0.1](https://docs.google.com/spreadsheets/d/1Cb72YOTOXoL8SKgs7ulR0KI9WT5WsE04RsISl_SBcqA/edit?gid=1475341752)의 ID 03이다.
+출처: [Drifts Data v0.1](https://docs.google.com/spreadsheets/d/1Cb72YOTOXoL8SKgs7ulR0KI9WT5WsE04RsISl_SBcqA/edit?gid=1475341752), ID 03.

@@ -34,6 +34,4 @@ python -m pip install "driftlens-sql-agent @ git+https://github.com/DriftLens-Te
 
 개발 체크아웃은 python -m pip install -e <agent-checkout>으로 설치해도 된다. 설치 version·가능한 commit/dirty 상태를 private manifest에 기록한다. 다른 command의 바이너리 provenance는 자동 추측하지 않는다.
 
-live 호출은 agent 설정을 복사해 provider를 upstage로 바꾸고 run 설정에서 선택한다. UPSTAGE_API_KEY와 UPSTAGE_MODEL을 환경에 설정한다. 키 없이 시작하면 실패하고 fake로 대체하지 않는다. 모델 ID는 사용 가능한 값을 사용자가 지정한다. **이번 구현 검증에서는 live API를 호출하지 않았다.**
-
-HTTP 서버, 임의 과거 로그 import, 다중 개념/테이블 protocol은 후속 작업이다.
+live 호출은 agent 설정을 복사해 provider를 upstage로 바꾸고 run 설정에서 선택한다. UPSTAGE_API_KEY와 UPSTAGE_MODEL을 환경에 설정한다. 키 없이 시작하면 실패하고 fake로 대체하지 않는다. 모델 ID는 사용 가능한 값을 지정한다. 자동 테스트는 fake provider를 사용한다.

@@ -21,4 +21,4 @@
 
 해시는 benchmark.artifacts.digest 또는 표준 SHA-256 구현으로 계산한다. evaluate --run <run> --predictions <file>로 제출한다. ID 누락/중복/추가, 미래 evidence, hash 불일치는 실패한다. 외부 제출 example은 [예시 폴더](../examples/README.md)를 참고한다.
 
-기본 내장 detector는 파일 접근 격리를 구현하지 않는다. 공식 격리 실행과 동적 플러그인 registry는 후속 범위다.
+탐지 프로세스의 파일 접근은 OS 수준에서 격리되지 않는다.

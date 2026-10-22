@@ -10,5 +10,3 @@ request/response는 개별 JSON 객체다. 프로세스 통신에서는 UTF-8 �
 python examples/custom_detector/submit.py --public runs/demo/public/L3 --out runs/demo/predictions/example.jsonl
 python -m driftlens_benchmark evaluate --run runs/demo --predictions runs/demo/predictions/example.jsonl
 ```
-
-예시 폴더에는 실제 실험 정답·API 키를 넣지 않는다. 브라우저 챗봇/HTTP 연결이나 과거 관측 import는 아직 제공하지 않는다.

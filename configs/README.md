@@ -6,4 +6,4 @@
 
 업무 정의는 case definitions.json 한 곳에만 둔다. 실제 agent config/profile은 실행마다 private/agent에 생성한다. API 키 값은 설정 파일에 넣지 않는다.
 
-알 수 없는 키·중복 YAML 키·미지원 capability·입력 checksum 불일치는 실패한다. fake와 live는 명시적으로 선택하며 자동 대체하지 않는다. detector는 현재 CLI의 sql-rules/no-drift 두 이름으로 선택한다. 사용하지 않는 detector 설정 파일은 두지 않는다.
+알 수 없는 키·중복 YAML 키·미지원 capability·입력 checksum 불일치는 실패한다. fake와 live는 명시적으로 선택하며 자동 대체하지 않는다. detector는 CLI에서 sql-rules/no-drift 중 선택한다.

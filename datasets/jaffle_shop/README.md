@@ -1,6 +1,6 @@
 # Jaffle Shop · C03 fixture
 
-현재 포함된 데이터는 [fixtures/orders.csv](fixtures/orders.csv)의 **자체 작성 합성 주문 8건**이다. 기존 benchmark fixture를 보존한 것이며 upstream 전체 CSV를 재배포하지 않는다.
+[fixtures/orders.csv](fixtures/orders.csv)는 **자체 작성 합성 주문 8건**이다.
 
 | 파일 | 역할 |
 | --- | --- |
@@ -13,4 +13,4 @@
 
 각 보고 주의 종료일 전에 있는 주문만 snapshot에 담는다. 이전 이력은 유지하고 다음 주 주문은 제외한다. DB에는 정의·변경일·정답을 넣지 않는다. 같은 주의 변경/고정군은 같은 snapshot을 사용한다.
 
-원천 Jaffle Shop의 6개 테이블을 쓰려면 키·단위·mapping·라이선스를 확인한 별도 dataset/schema 버전이 필요하다. 현재 importer는 order CSV/JSONL만 지원한다. 업스트림 원천 재배포 조건은 이 작업에서 재검증하지 않았다. 자체 합성 fixture는 프로젝트 Apache-2.0을 따른다.
+importer는 주문 CSV/JSONL을 지원한다. 포함된 합성 fixture는 프로젝트 Apache-2.0 라이선스를 따른다.
