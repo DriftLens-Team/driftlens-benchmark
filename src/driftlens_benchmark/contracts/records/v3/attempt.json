@@ -258,6 +258,12 @@
             "boolean",
             "null"
           ]
+        },
+        "behavioral_agreement": {
+          "type": [
+            "boolean",
+            "null"
+          ]
         }
       },
       "required": [
@@ -332,6 +338,12 @@
         "minimum": 1
       },
       "minProperties": 1
+    },
+    "validation_policy": {
+      "enum": [
+        "structural",
+        "behavioral"
+      ]
     }
   },
   "required": [
@@ -356,36 +368,88 @@
           "checks",
           "counterexamples"
         ],
-        "properties": {
-          "checks": {
-            "type": "object",
-            "properties": {
-              "query_correct_for_used_definition": {
-                "const": true
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "validation_policy": {
+                  "const": "behavioral"
+                }
               },
-              "query_result_matches_reference": {
-                "const": true
-              },
-              "reported_value_matches_query_result": {
-                "const": true
-              },
-              "answer_matches_query_result": {
-                "const": true
-              },
-              "definition_note_consistent": {
-                "const": true
+              "required": [
+                "validation_policy"
+              ]
+            },
+            "then": {
+              "properties": {
+                "checks": {
+                  "type": "object",
+                  "properties": {
+                    "query_correct_for_used_definition": {
+                      "type": "null"
+                    },
+                    "query_result_matches_reference": {
+                      "const": true
+                    },
+                    "reported_value_matches_query_result": {
+                      "const": true
+                    },
+                    "answer_matches_query_result": {
+                      "const": true
+                    },
+                    "definition_note_consistent": {
+                      "const": true
+                    },
+                    "behavioral_agreement": {
+                      "const": true
+                    }
+                  },
+                  "required": [
+                    "query_correct_for_used_definition",
+                    "query_result_matches_reference",
+                    "reported_value_matches_query_result",
+                    "answer_matches_query_result",
+                    "definition_note_consistent",
+                    "behavioral_agreement"
+                  ],
+                  "additionalProperties": false
+                }
               }
             },
-            "required": [
-              "query_correct_for_used_definition",
-              "query_result_matches_reference",
-              "reported_value_matches_query_result",
-              "answer_matches_query_result",
-              "definition_note_consistent"
-            ],
-            "additionalProperties": false
+            "else": {
+              "properties": {
+                "checks": {
+                  "type": "object",
+                  "properties": {
+                    "query_correct_for_used_definition": {
+                      "const": true
+                    },
+                    "query_result_matches_reference": {
+                      "const": true
+                    },
+                    "reported_value_matches_query_result": {
+                      "const": true
+                    },
+                    "answer_matches_query_result": {
+                      "const": true
+                    },
+                    "definition_note_consistent": {
+                      "const": true
+                    }
+                  },
+                  "required": [
+                    "query_correct_for_used_definition",
+                    "query_result_matches_reference",
+                    "reported_value_matches_query_result",
+                    "answer_matches_query_result",
+                    "definition_note_consistent"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
           }
-        }
+        ]
       }
     },
     {

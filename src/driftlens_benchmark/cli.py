@@ -46,6 +46,8 @@ def main(argv=None):
     semalign.add_argument("--limit", type=int)
     semalign.add_argument("--model-env", default="UPSTAGE_MODEL")
     semalign.add_argument("--key-env", default="UPSTAGE_API_KEY")
+    semalign.add_argument("--validation-policy", choices=["structural", "behavioral"], default="structural")
+    semalign.add_argument("--progress", action="store_true", help="Write per-request JSON progress to stderr")
     semalign_detect = commands.add_parser(
         "detect-semalign", help="Public-only LOG/T1 and online T2 predictions"
     )
@@ -101,6 +103,10 @@ def main(argv=None):
                 limit=args.limit,
                 model_env=args.model_env,
                 key_env=args.key_env,
+                validation_policy=args.validation_policy,
+                on_progress=(lambda event: print(encoded(event), file=sys.stderr, flush=True))
+                if args.progress
+                else None,
             )
             print(
                 encoded(

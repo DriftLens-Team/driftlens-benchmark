@@ -88,13 +88,23 @@ def text_value(node):
     raise UnknownSQL("not_text_literal")
 
 
-def day_value(node):
+def day_value(node, *, full_timestamp=False):
     """Recognize concrete midnight bounds and the explicit prior-week shift."""
     node = bare(node)
     if isinstance(node, exp.Literal) and node.is_string:
         value = node.this
-        if len(value) == 10 or (len(value) == 19 and value[10:] == "T00:00:00"):
+        if (len(value) == 10 and not full_timestamp) or (len(value) == 19 and value[10:] == "T00:00:00"):
             return date.fromisoformat(value[:10])
+    if isinstance(node, exp.DPipe) and text_value(node.expression) == "T00:00:00":
+        left = bare(node.this)
+        if isinstance(left, (exp.Date, exp.Anonymous)) or (
+            isinstance(left, exp.Literal) and left.is_string and len(left.this) == 10
+        ):
+            return day_value(left)
+    if full_timestamp:
+        # ordered_at stores YYYY-MM-DDTHH:MM:SS. A same-day midnight compares
+        # greater than a date-only string, so that cannot prove incompleteness.
+        raise UnknownSQL("timestamp_completeness_bound_required")
     if isinstance(node, exp.Date) and node.args.get("zone") and text_value(node.args["zone"]) == "-7 days":
         return day_value(node.this) - timedelta(days=7)
     # SQLGlot represents SQLite DATE(s, '-7 days') as an anonymous function.
@@ -377,6 +387,20 @@ def extract(sql, concept_id, window):
         root = qualify(
             statements[0], dialect="sqlite", schema=SCHEMA, quote_identifiers=False, identify=False
         )
+        # Clauses attached below SELECT (for example TABLESAMPLE or GROUP ROLLUP)
+        # also affect meaning. Reject modifiers that the relational rules do not
+        # consume, including SQLite's scalar multi-argument MIN.
+        for node in root.walk():
+            allowed = {
+                exp.Table: {"this", "db", "catalog", "alias"},
+                exp.Group: {"expressions"},
+                exp.Join: {"this", "on", "side", "kind", "using"},
+                exp.From: {"this"},
+                exp.Subquery: {"this", "alias"},
+                exp.Min: {"this"},
+            }.get(type(node))
+            if allowed is not None and any(value and key not in allowed for key, value in node.args.items()):
+                raise UnknownSQL("unsupported_relational_modifier")
         ctes = {}
         with_clause = root.args.get("with_")
         if with_clause:
@@ -681,6 +705,14 @@ def new_customers(query, start, end):
         if having and not where(query) and first_alias is None:
             predicates = []
             for node in terms(having.this):
+                _, left, right = comparison(node)
+                # SQLite permits a bare grouped column in HAVING, but that is an
+                # arbitrary row's date, not the customer's first-ever order.
+                if not any(
+                    isinstance(value, exp.Min) and col(value.this, alias, "ordered_at")
+                    for value in (left, right)
+                ):
+                    raise UnknownSQL("first_order_aggregate_required")
                 n = node.copy()
                 for aggregate in list(n.find_all(exp.Min)):
                     if not col(aggregate.this, alias, "ordered_at"):
@@ -847,7 +879,7 @@ def growth(query, start, end):
             if (
                 op is not exp.GT
                 or lower(a, env, alias, domain) != "first"
-                or lower(b, env, alias, domain) != prior
+                or day_value(b, full_timestamp=True) != prior
                 or not isinstance(branch.args["true"], exp.Null)
             ):
                 raise UnknownSQL("growth_completeness_guard")
@@ -857,20 +889,19 @@ def growth(query, start, end):
                 ("sub", ("div", "cur", "prev"), Fraction(1)),
             }:
                 raise UnknownSQL("growth_formula")
-            real = any(
-                isinstance(x, exp.Literal) and not x.is_string and "." in x.this
-                for x in node.args["default"].walk()
-            )
-            if not real:
-                raise UnknownSQL("growth_integer_division")
             return "growth"
-        if isinstance(node, (exp.Sub, exp.Add, exp.Mul, exp.Div)):
+        if isinstance(node, exp.Div):
+            # Promotion must happen before this division. Multiplying its result
+            # by 1.0 or subtracting 1.0 afterwards cannot undo integer truncation.
+            top, bottom = ratio(node)
+            return ("div", lower(top, env, alias, domain), lower(bottom, env, alias, domain))
+        if isinstance(node, (exp.Sub, exp.Add, exp.Mul)):
             a, b = lower(node.this, env, alias, domain), lower(node.expression, env, alias, domain)
             if isinstance(node, exp.Mul) and a == 1:
                 return b
             if isinstance(node, exp.Mul) and b == 1:
                 return a
-            return ({exp.Sub: "sub", exp.Add: "add", exp.Mul: "mul", exp.Div: "div"}[type(node)], a, b)
+            return ({exp.Sub: "sub", exp.Add: "add", exp.Mul: "mul"}[type(node)], a, b)
         raise UnknownSQL("growth_unknown_expression")
 
     values = query_values(query)

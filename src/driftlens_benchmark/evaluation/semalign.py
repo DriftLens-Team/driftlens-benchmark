@@ -193,11 +193,43 @@ def evaluate_semalign(run_path, prediction_path, *, allow_partial=False, out=Non
     bundle = load_fixture_bundle(public)
     if bundle["manifest"]["stage"] != "validated_observations":
         raise ValueError("unvalidated_preparation_bundle")
+    policy = run.get("validation_policy", "structural")
+    if policy not in {"structural", "behavioral"}:
+        raise ValueError("invalid_validation_policy")
+    expected_scope, expected_dependence = (
+        (
+            "meaning_and_execution",
+            "shared_sql_meaning_extractor_with_independent_row_and_counterexample_checks",
+        )
+        if policy == "structural"
+        else ("behavioral_agreement", "detector_independent_finite_database_agreement")
+    )
+    if (
+        bundle["manifest"]["validation_scope"] != expected_scope
+        or run.get("validation_scope", expected_scope) != expected_scope
+        or run.get("validation_dependence", expected_dependence) != expected_dependence
+    ):
+        raise ValueError("validation_policy_scope_mismatch")
     rows = {r["log_id"]: r for r in bundle["logs"]}
     planned = read_jsonl(root / "private/planned.jsonl")
     attempts = unique(
         [validate("records/v3/attempt", row) for row in read_jsonl(root / "private/attempts.jsonl")]
     )
+    for attempt in attempts:
+        if attempt.get("validation_policy", "structural") != policy:
+            raise ValueError("attempt_validation_policy_mismatch")
+        checks = attempt.get("checks")
+        if checks is not None and (
+            (
+                policy == "behavioral"
+                and (
+                    checks["query_correct_for_used_definition"] is not None
+                    or "behavioral_agreement" not in checks
+                )
+            )
+            or (policy == "structural" and "behavioral_agreement" in checks)
+        ):
+            raise ValueError("attempt_validation_check_policy_mismatch")
     truth = unique([validate("records/v3/truth", row) for row in read_jsonl(root / "private/truth.jsonl")])
     by_id = {t["log_id"]: t for t in truth}
     planned_ids = {p["request"]["request_id"] for p in planned}
@@ -471,8 +503,16 @@ def evaluate_semalign(run_path, prediction_path, *, allow_partial=False, out=Non
         "generation_valid_rate": run["validated"] / run["attempted"] if run["attempted"] else None,
         "quality_by_concept": run["quality_by_concept"],
         "quality_by_sql_shape": run.get("quality_by_sql_shape"),
-        "validation_dependence": "shared_sql_meaning_extractor_with_independent_row_and_counterexample_checks",
-        "accuracy_claim": "development_consistency_only; filtered SQL scores are not independent detector accuracy",
+        "validation_policy": run.get("validation_policy", "structural"),
+        "validation_dependence": run.get(
+            "validation_dependence",
+            "shared_sql_meaning_extractor_with_independent_row_and_counterexample_checks",
+        ),
+        "accuracy_claim": (
+            "conditional_on_finite_database_agreement; not proof of arbitrary SQL equivalence or held-out generalization"
+            if run.get("validation_policy") == "behavioral"
+            else "development_consistency_only; filtered SQL scores are not independent detector accuracy"
+        ),
         "LOG": aggregate(log_items),
         "T1": aggregate(pair_items),
         "T2": aggregate(series_items),

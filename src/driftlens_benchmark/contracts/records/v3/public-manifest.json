@@ -28,7 +28,8 @@
     "validation_scope": {
       "enum": [
         "structure_and_alignment",
-        "meaning_and_execution"
+        "meaning_and_execution",
+        "behavioral_agreement"
       ]
     },
     "generation_validation": {
@@ -91,7 +92,10 @@
             "const": "performed"
           },
           "validation_scope": {
-            "const": "meaning_and_execution"
+            "enum": [
+              "meaning_and_execution",
+              "behavioral_agreement"
+            ]
           }
         }
       },

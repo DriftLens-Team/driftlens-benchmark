@@ -104,7 +104,7 @@ def create_evaluation_source(root):
             elif cid == "sa_tax_rate_avg":
                 sql = "SELECT SUM(tax_paid_cents)*1.0/SUM(subtotal_cents) FROM orders WHERE " + window
             else:
-                sql = "SELECT CASE WHEN (SELECT MIN(ordered_at) FROM orders)>date('{s}','-7 days') THEN NULL ELSE (cur-prev)*1.0/prev END FROM (SELECT SUM(CASE WHEN ordered_at >= '{s}' THEN subtotal_cents END) AS cur,SUM(CASE WHEN ordered_at < '{s}' THEN subtotal_cents END) AS prev FROM orders WHERE ordered_at >= date('{s}','-7 days') AND ordered_at < '{e}')"
+                sql = "SELECT CASE WHEN (SELECT MIN(ordered_at) FROM orders)>(date('{s}','-7 days') || 'T00:00:00') THEN NULL ELSE (cur-prev)*1.0/prev END FROM (SELECT SUM(CASE WHEN ordered_at >= '{s}' THEN subtotal_cents END) AS cur,SUM(CASE WHEN ordered_at < '{s}' THEN subtotal_cents END) AS prev FROM orders WHERE ordered_at >= date('{s}','-7 days') AND ordered_at < '{e}')"
             queries[version, cid] = sql
             metrics.append(
                 {

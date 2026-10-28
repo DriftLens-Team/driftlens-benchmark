@@ -3,8 +3,10 @@
 import os
 import subprocess
 import sys
+import time
 from collections import Counter
 from copy import deepcopy
+from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
 
@@ -33,14 +35,22 @@ def run_semalign(
     limit=None,
     model_env="UPSTAGE_MODEL",
     key_env="UPSTAGE_API_KEY",
+    validation_policy="structural",
+    on_progress=None,
 ):
     """Keep failures in the denominator; only verified observations enter public files."""
+    started = time.monotonic()
     source = load_source(source_root)
     output = Path(output).resolve()
     if output.exists() or output.is_relative_to(source.root):
         raise ValueError("semalign_output_not_new")
     if mode not in {"fixture", "agent"} or provider not in {"fake", "upstage"}:
         raise ValueError("invalid_semalign_mode")
+    if validation_policy not in {"structural", "behavioral"}:
+        raise ValueError("invalid_validation_policy")
+    validation_scope = (
+        "meaning_and_execution" if validation_policy == "structural" else "behavioral_agreement"
+    )
     if limit is not None and (type(limit) is not int or limit <= 0):
         raise ValueError("invalid_request_limit")
     catalogs, baseline, catalog_hashes = load_meanings(source)
@@ -91,6 +101,7 @@ def run_semalign(
     write_jsonl(private / "planned.jsonl", planned)
     manifest = {
         "contract_version": "records/v3",
+        "started_at": datetime.now(timezone.utc).isoformat(),
         "artifact_revision": 2,
         "status": "running",
         "source_mode": "synthetic_fixture" if mode == "fixture" else "agent",
@@ -115,7 +126,8 @@ def run_semalign(
         "definition_note_origin": "profile_rendered" if mode == "agent" else "source_template",
         "isolation": "unisolated",
         "snapshots": {},
-        "validation_scope": "meaning_and_execution",
+        "validation_scope": validation_scope,
+        "validation_policy": validation_policy,
     }
     write_json(private / "manifest.json", manifest)
     attempts, truth, validated_rows = [], [], []
@@ -132,7 +144,13 @@ def run_semalign(
         if cutoff not in manifest["snapshots"]:
             manifest["snapshots"][cutoff] = snapshot(source.root / "data/jaffle.sqlite", db, cutoff)
             probe_cache[cutoff] = probes(private / "counterexamples" / cutoff[:10], request["window"])
-        attempt = {"log_id": rid, "concept_id": cid, "used_definition": used, "status": "failed"}
+        attempt = {
+            "log_id": rid,
+            "concept_id": cid,
+            "used_definition": used,
+            "status": "failed",
+            "validation_policy": validation_policy,
+        }
         manifest["attempted"] += 1
         try:
             if mode == "fixture":
@@ -195,6 +213,7 @@ def run_semalign(
                 probe_cache[cutoff],
                 mode=mode,
                 definition=current["definition"],
+                policy=validation_policy,
             )
             attempt.update(validation)
             if validation["status"] == "validated":
@@ -231,6 +250,21 @@ def run_semalign(
         attempts.append(attempt)
         write_json(private / "attempts" / (rid + ".json"), attempt)
         write_json(private / "manifest.json", manifest, replace=True)
+        if on_progress is not None:
+            on_progress(
+                {
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "concept_id": cid,
+                    "status": attempt["status"],
+                    "attempted": manifest["attempted"],
+                    "planned": manifest["planned"],
+                    "validated": manifest["validated"],
+                    "rejected": manifest["rejected"],
+                    "unverified": manifest["unverified"],
+                    "failed": manifest["failed"],
+                    "elapsed_seconds": round(time.monotonic() - started, 3),
+                }
+            )
     by_id = {t["log_id"]: t for t in truth}
     pairs, pair_truth, planned_pairs = [], [], []
     source_pair_truth = {p["pair_id"]: p for p in read_jsonl(source.root / "data/pairs_truth.jsonl")}
@@ -284,7 +318,7 @@ def run_semalign(
                     "level": level,
                     "source_mode": manifest["source_mode"],
                     "stage": "validated_observations",
-                    "validation_scope": "meaning_and_execution",
+                    "validation_scope": validation_scope,
                     "generation_validation": "performed",
                     "files": {
                         name: digest(public / name)
@@ -314,6 +348,8 @@ def run_semalign(
         group = shapes.setdefault(key, {"shape": shape, "statuses": Counter()})
         group["statuses"][attempt["status"]] += 1
     manifest.update(
+        finished_at=datetime.now(timezone.utc).isoformat(),
+        elapsed_seconds=round(time.monotonic() - started, 3),
         status="complete" if manifest["validated"] == manifest["planned"] else "partial",
         execution_complete=manifest["attempted"] == manifest["planned"],
         planned_pairs=len(source.pairs),
@@ -324,7 +360,11 @@ def run_semalign(
             for cid in catalogs["v1"]
         },
         quality_by_sql_shape=list(shapes.values()),
-        validation_dependence="shared_sql_meaning_extractor_with_independent_row_and_counterexample_checks",
+        validation_dependence=(
+            "shared_sql_meaning_extractor_with_independent_row_and_counterexample_checks"
+            if validation_policy == "structural"
+            else "detector_independent_finite_database_agreement"
+        ),
     )
     manifest["files_sha256"] = {
         p.relative_to(output).as_posix(): digest(p)

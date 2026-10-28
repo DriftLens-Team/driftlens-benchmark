@@ -79,6 +79,7 @@ def test_equivalent_unseen_average_expressions(sql):
         "SELECT AVG(o.subtotal_cents) FROM orders o WHERE o.ordered_at >= '2025-01-14' AND o.ordered_at < '2025-01-20'",
         "SELECT AVG(o.subtotal_cents) FROM orders o WHERE " + BOUND + "; SELECT 1",
         "SELECT AVG(o.subtotal_cents) OVER () FROM orders o WHERE " + BOUND,
+        "SELECT AVG(o.subtotal_cents) FROM orders o TABLESAMPLE (1) WHERE " + BOUND,
     ],
 )
 def test_unconsumed_clauses_do_not_produce_same(sql):
@@ -221,3 +222,85 @@ def test_numeric_diagnostic_freezes_calibration_and_first_alarm():
         {"logs": rows[:4], "series": [{**group, "log_ids": group["log_ids"][:4]}]}
     )
     assert calibration_only["alarms"]["sa_customers_active"]["decision"] == "abstain"
+
+
+def growth_query(formula, boundary="(date('2025-01-13','-7 days') || 'T00:00:00')"):
+    """Independent two-week arithmetic fixture, separate from source SQL variants."""
+    return (
+        "SELECT CASE WHEN (SELECT MIN(ordered_at) FROM orders)>"
+        + boundary
+        + " THEN NULL ELSE "
+        + formula
+        + " END FROM (SELECT SUM(CASE WHEN ordered_at >= '2025-01-13' THEN subtotal_cents END) AS cur,"
+        "SUM(CASE WHEN ordered_at < '2025-01-13' THEN subtotal_cents END) AS prev FROM orders "
+        "WHERE ordered_at >= '2025-01-06' AND ordered_at < '2025-01-20')"
+    )
+
+
+@pytest.mark.parametrize("formula", ["(cur-prev)/prev*1.0", "cur/prev-1.0"])
+def test_growth_requires_float_promotion_before_division(tmp_path, formula):
+    import sqlite3
+
+    path = tmp_path / "growth.sqlite"
+    with sqlite3.connect(path) as db:
+        db.execute("CREATE TABLE orders(ordered_at TEXT, subtotal_cents INTEGER)")
+        db.executemany(
+            "INSERT INTO orders VALUES(?,?)",
+            [("2025-01-06T00:00:00", 100), ("2025-01-13T00:00:00", 150)],
+        )
+    db.close()
+    good = growth_query("(cur-prev)*1.0/prev")
+    bad = growth_query(formula)
+    assert scalar(path, good) == 0.5
+    assert scalar(path, bad) == 0.0
+    assert extract(good, "sa_revenue_growth_wow", WINDOW) == MEANINGS["sa_revenue_growth_wow"]
+    assert extract(bad, "sa_revenue_growth_wow", WINDOW) is None
+
+
+@pytest.mark.parametrize("first", ["ordered_at", "MIN(ordered_at, '2100-01-01')"])
+def test_new_customers_requires_aggregate_first_order(tmp_path, first):
+    import sqlite3
+
+    path = tmp_path / "customers.sqlite"
+    with sqlite3.connect(path) as db:
+        db.execute("CREATE TABLE orders(customer_id TEXT, ordered_at TEXT)")
+        # Insert the current row first to expose arbitrary grouped-column semantics.
+        db.executemany(
+            "INSERT INTO orders VALUES(?,?)",
+            [
+                ("returning", "2025-01-13T12:00:00"),
+                ("returning", "2025-01-01T12:00:00"),
+                ("new", "2025-01-14T12:00:00"),
+            ],
+        )
+    db.close()
+    template = (
+        "SELECT COUNT(*) FROM (SELECT customer_id FROM orders GROUP BY customer_id HAVING "
+        "{first}>='2025-01-13' AND {first}<'2025-01-20')"
+    )
+    good, bad = template.format(first="MIN(ordered_at)"), template.format(first=first)
+    assert scalar(path, good) == 1
+    assert scalar(path, bad) == 2
+    assert extract(good, "sa_customers_new", WINDOW) == MEANINGS["sa_customers_new"]
+    assert extract(bad, "sa_customers_new", WINDOW) is None
+
+
+def test_growth_completeness_uses_full_midnight_timestamp(tmp_path):
+    import sqlite3
+
+    path = tmp_path / "boundary.sqlite"
+    with sqlite3.connect(path) as db:
+        db.execute("CREATE TABLE orders(ordered_at TEXT, subtotal_cents INTEGER)")
+        db.executemany(
+            "INSERT INTO orders VALUES(?,?)",
+            [("2025-01-06T00:00:00", 100), ("2025-01-13T00:00:00", 150)],
+        )
+    db.close()
+    full = growth_query("(cur-prev)*1.0/prev")
+    literal = growth_query("(cur-prev)*1.0/prev", "'2025-01-06T00:00:00'")
+    short = growth_query("(cur-prev)*1.0/prev", "date('2025-01-13','-7 days')")
+    assert scalar(path, full) == scalar(path, literal) == 0.5
+    assert scalar(path, short) is None
+    assert extract(full, "sa_revenue_growth_wow", WINDOW) == MEANINGS["sa_revenue_growth_wow"]
+    assert extract(literal, "sa_revenue_growth_wow", WINDOW) == MEANINGS["sa_revenue_growth_wow"]
+    assert extract(short, "sa_revenue_growth_wow", WINDOW) is None
