@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "contract_version": {
+      "const": "records/v3"
+    },
+    "level": {
+      "enum": [
+        "L0",
+        "L1",
+        "L2",
+        "L3"
+      ]
+    },
+    "source_mode": {
+      "enum": [
+        "synthetic_fixture",
+        "agent"
+      ]
+    },
+    "stage": {
+      "enum": [
+        "data_preparation",
+        "validated_observations"
+      ]
+    },
+    "validation_scope": {
+      "enum": [
+        "structure_and_alignment",
+        "meaning_and_execution"
+      ]
+    },
+    "generation_validation": {
+      "enum": [
+        "not_run",
+        "performed"
+      ]
+    },
+    "files": {
+      "type": "object",
+      "properties": {
+        "baseline.json": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "logs.jsonl": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "pairs.jsonl": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "series.json": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "required": [
+        "baseline.json",
+        "logs.jsonl",
+        "pairs.jsonl",
+        "series.json"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "contract_version",
+    "level",
+    "source_mode",
+    "stage",
+    "validation_scope",
+    "generation_validation",
+    "files"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "stage": {
+            "const": "validated_observations"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "generation_validation": {
+            "const": "performed"
+          },
+          "validation_scope": {
+            "const": "meaning_and_execution"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "generation_validation": {
+            "const": "not_run"
+          },
+          "validation_scope": {
+            "const": "structure_and_alignment"
+          },
+          "source_mode": {
+            "const": "synthetic_fixture"
+          }
+        }
+      }
+    }
+  ]
+}

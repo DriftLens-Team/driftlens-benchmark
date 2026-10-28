@@ -1,0 +1,176 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "concept_id": {
+      "enum": [
+        "sa_food_orders",
+        "sa_drink_orders",
+        "sa_customers_active",
+        "sa_customers_new",
+        "sa_order_value_avg",
+        "sa_revenue_growth_wow",
+        "sa_tax_rate_avg"
+      ]
+    },
+    "step": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "cutoff": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$"
+    },
+    "view_file": {
+      "type": "string",
+      "pattern": "^online/sa_[a-z_]+/[0-9]{3}\\.json$"
+    },
+    "view_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "prediction": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "concept_id": {
+          "enum": [
+            "sa_food_orders",
+            "sa_drink_orders",
+            "sa_customers_active",
+            "sa_customers_new",
+            "sa_order_value_avg",
+            "sa_revenue_growth_wow",
+            "sa_tax_rate_avg"
+          ]
+        },
+        "decision": {
+          "enum": [
+            "change",
+            "no_change",
+            "abstain"
+          ]
+        },
+        "estimated_change_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date"
+        },
+        "alarm_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reason_code": {
+          "enum": [
+            "definition_mismatch",
+            "equivalent_definition",
+            "unsupported_sql",
+            "insufficient_evidence",
+            "evidence_conflict",
+            "constant_baseline",
+            "numeric_signal"
+          ]
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "log_id": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+              },
+              "field": {
+                "enum": [
+                  "sql",
+                  "definition_note",
+                  "reported_values",
+                  "answer_text"
+                ]
+              },
+              "quote": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "log_id",
+              "field",
+              "quote"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0
+        },
+        "evidence_summary": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "concept_id",
+        "decision",
+        "estimated_change_at",
+        "alarm_at",
+        "reason_code",
+        "evidence",
+        "evidence_summary"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "decision": {
+                "const": "change"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "estimated_change_at": {
+                "type": "string",
+                "format": "date"
+              },
+              "alarm_at": {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "estimated_change_at": {
+                "type": "null"
+              },
+              "alarm_at": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "required": [
+    "concept_id",
+    "step",
+    "cutoff",
+    "view_file",
+    "view_sha256",
+    "prediction"
+  ],
+  "additionalProperties": false
+}

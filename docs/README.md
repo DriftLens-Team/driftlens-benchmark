@@ -1,5 +1,10 @@
 # Documentation
 
+- [SemAlign 전체 실행](semalign-runtime.md): 외부 agent/v2·독립 반례 검수·온라인 탐지·새 채점.
+- [SemAlign 검증 기록](semalign-verification.md): fixture/fake/실제 모델 구분과 확인된 실패.
+
+- [SemAlign data 연결](semalign-data.md): 구현된 입력 준비·새 계약·기존 실행과의 경계.
+- [SemAlign 채점기 설계안](semalign-design.md): data → SQL agent → benchmark 흐름의 전체 설계와 후속 단계.
 - [빠른 시작](quickstart.md): 설치·실행·예상 결과.
 - [아키텍처](architecture.md): 책임·데이터 흐름·정보 경계.
 - [에이전트 연결](connecting-an-agent.md): 현재 JSONL 프로토콜, live 설정.

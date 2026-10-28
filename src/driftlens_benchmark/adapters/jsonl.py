@@ -43,8 +43,16 @@ def terminate(process):
     process.wait(timeout=5)
 
 
-def exchange(command, request, *, cwd, timeout):
-    request_check(request)
+def exchange(command, request, *, cwd, timeout, protocol="agent/v1"):
+    """Exchange one explicitly selected protocol; never infer it from request fields."""
+    if protocol == "agent/v1":
+        request_check(request)
+    elif protocol == "agent/v2":
+        from ..contracts.semalign import request_check as v2_request_check
+
+        v2_request_check(request)
+    else:
+        raise ValueError("unsupported_agent_protocol")
     data = (encoded(request) + "\n").encode("utf-8")
     if len(data) - 1 > MAX_LINE:
         raise AgentFailure("request_too_large")
@@ -135,15 +143,22 @@ def exchange(command, request, *, cwd, timeout):
         if not raw or b"\n" in raw or b"\r" in raw or len(raw) > MAX_LINE:
             raise ValueError
         response = strict_json(raw.decode("utf-8"))
-        validate("agent/v1/response", response)
+        validate(protocol + "/response", response)
         if response["request_id"] != request["request_id"]:
             raise ValueError
+        if protocol == "agent/v2":
+            from ..contracts.semalign import response_check
+
+            response_check(response, request)
     except (ValueError, UnicodeError, RecursionError):
         raise AgentFailure("invalid_agent_response", diagnostics) from None
     if response["status"] == "error":
         raise AgentFailure(response["error"]["code"], diagnostics)
     if process.returncode != 0:
         raise AgentFailure("agent_exit_failed", diagnostics)
-    if response["observation"]["reported_values"][0]["period"] != request["period"]:
+    if (
+        protocol == "agent/v1"
+        and response["observation"]["reported_values"][0]["period"] != request["period"]
+    ):
         raise AgentFailure("response_period_mismatch", diagnostics)
     return response["observation"], diagnostics

@@ -8,6 +8,8 @@ C03 대형 주문의 기준을 2,000 → 3,000 cents로 바꾸는 변경군과, 
 
 SQLite DB 생성, 외부 SQL 에이전트 실행, 답변·쿼리 검수, 드리프트 탐지 및 채점을 수행합니다. 현재 C03 케이스와 L3 관측 형식을 지원합니다.
 
+SemAlign의 **7개 지표·L0~L3 생성, 검수, LOG/T1/온라인 T2 탐지와 채점**도 지원합니다. `run-semalign`, `detect-semalign`, `evaluate-semalign`은 외부 agent/v2와 연결하고 생성 오류·기권·부분 실행을 분리해 보고합니다. [실행 방법](docs/semalign-runtime.md), [입력 준비와 계약](docs/semalign-data.md), [검증 결과와 제한](docs/semalign-verification.md)을 참고하세요.
+
 ## 빠른 시작
 
 Python 3.11 이상과 Git이 필요합니다. 다음은 저장소 루트의 PowerShell 명령입니다. 첫 실행은 API 키 없는 companion agent의 fake 모델을 사용합니다.

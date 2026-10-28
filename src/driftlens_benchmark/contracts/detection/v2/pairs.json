@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "pair_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+    },
+    "concept_id": {
+      "enum": [
+        "sa_food_orders",
+        "sa_drink_orders",
+        "sa_customers_active",
+        "sa_customers_new",
+        "sa_order_value_avg",
+        "sa_revenue_growth_wow",
+        "sa_tax_rate_avg"
+      ]
+    },
+    "decision": {
+      "enum": [
+        "changed",
+        "unchanged",
+        "abstain"
+      ]
+    },
+    "reason_code": {
+      "enum": [
+        "definition_mismatch",
+        "equivalent_definition",
+        "unsupported_sql",
+        "insufficient_evidence",
+        "evidence_conflict",
+        "constant_baseline",
+        "numeric_signal"
+      ]
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "log_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+          },
+          "field": {
+            "enum": [
+              "sql",
+              "definition_note",
+              "reported_values",
+              "answer_text"
+            ]
+          },
+          "quote": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "log_id",
+          "field",
+          "quote"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0
+    },
+    "evidence_summary": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "required": [
+    "pair_id",
+    "concept_id",
+    "decision",
+    "reason_code",
+    "evidence",
+    "evidence_summary"
+  ],
+  "additionalProperties": false
+}

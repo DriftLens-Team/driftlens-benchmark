@@ -1,0 +1,406 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "log_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+    },
+    "concept_id": {
+      "enum": [
+        "sa_food_orders",
+        "sa_drink_orders",
+        "sa_customers_active",
+        "sa_customers_new",
+        "sa_order_value_avg",
+        "sa_revenue_growth_wow",
+        "sa_tax_rate_avg"
+      ]
+    },
+    "used_definition": {
+      "enum": [
+        "v1",
+        "v2"
+      ]
+    },
+    "status": {
+      "enum": [
+        "validated",
+        "rejected",
+        "unverified",
+        "failed"
+      ]
+    },
+    "observation": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "log_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$"
+        },
+        "agent_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+        },
+        "team": {
+          "type": "string",
+          "minLength": 1
+        },
+        "request": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "sql": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "maxLength": 10000
+        },
+        "answer_text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "definition_note": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "reported_values": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "result_id": {
+                "const": "r1"
+              },
+              "concept_id": {
+                "enum": [
+                  "sa_food_orders",
+                  "sa_drink_orders",
+                  "sa_customers_active",
+                  "sa_customers_new",
+                  "sa_order_value_avg",
+                  "sa_revenue_growth_wow",
+                  "sa_tax_rate_avg"
+                ]
+              },
+              "type": {
+                "const": "metric_value"
+              },
+              "value": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "unit": {
+                "enum": [
+                  "count",
+                  "cents",
+                  "ratio"
+                ]
+              },
+              "window": {
+                "type": "object",
+                "properties": {
+                  "start": {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$"
+                  },
+                  "end": {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$"
+                  }
+                },
+                "required": [
+                  "start",
+                  "end"
+                ],
+                "additionalProperties": false
+              },
+              "as_of": {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$"
+              }
+            },
+            "required": [
+              "result_id",
+              "concept_id",
+              "type",
+              "value",
+              "unit",
+              "window",
+              "as_of"
+            ],
+            "additionalProperties": false,
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "unit": {
+                      "const": "count"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "value": {
+                      "type": [
+                        "integer",
+                        "null"
+                      ],
+                      "minimum": 0,
+                      "maximum": 9223372036854775807
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "unit": {
+                      "const": "cents"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "value": {
+                      "type": [
+                        "integer",
+                        "null"
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "minItems": 1,
+          "maxItems": 1
+        },
+        "referenced_concepts": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "sa_food_orders",
+              "sa_drink_orders",
+              "sa_customers_active",
+              "sa_customers_new",
+              "sa_order_value_avg",
+              "sa_revenue_growth_wow",
+              "sa_tax_rate_avg"
+            ]
+          },
+          "minItems": 1,
+          "maxItems": 1
+        }
+      },
+      "required": [
+        "log_id",
+        "timestamp",
+        "agent_id",
+        "team",
+        "request",
+        "sql",
+        "answer_text",
+        "definition_note",
+        "reported_values",
+        "referenced_concepts"
+      ],
+      "additionalProperties": false
+    },
+    "checks": {
+      "type": "object",
+      "properties": {
+        "query_correct_for_used_definition": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "query_result_matches_reference": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "reported_value_matches_query_result": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "answer_matches_query_result": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "definition_note_consistent": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "query_correct_for_used_definition",
+        "query_result_matches_reference",
+        "reported_value_matches_query_result",
+        "answer_matches_query_result",
+        "definition_note_consistent"
+      ],
+      "additionalProperties": false
+    },
+    "reasons": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "counterexamples": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "case": {
+            "type": "string",
+            "minLength": 1
+          },
+          "matched": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "case",
+          "matched"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "error": {
+      "type": "string",
+      "minLength": 1
+    },
+    "diagnostics": {
+      "type": "object",
+      "properties": {
+        "exit_code": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "stderr_bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "stderr_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "required": [
+        "exit_code",
+        "stderr_bytes",
+        "stderr_sha256"
+      ],
+      "additionalProperties": false
+    },
+    "sql_shape": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "minProperties": 1
+    }
+  },
+  "required": [
+    "log_id",
+    "concept_id",
+    "used_definition",
+    "status"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "validated"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "observation",
+          "checks",
+          "counterexamples"
+        ],
+        "properties": {
+          "checks": {
+            "type": "object",
+            "properties": {
+              "query_correct_for_used_definition": {
+                "const": true
+              },
+              "query_result_matches_reference": {
+                "const": true
+              },
+              "reported_value_matches_query_result": {
+                "const": true
+              },
+              "answer_matches_query_result": {
+                "const": true
+              },
+              "definition_note_consistent": {
+                "const": true
+              }
+            },
+            "required": [
+              "query_correct_for_used_definition",
+              "query_result_matches_reference",
+              "reported_value_matches_query_result",
+              "answer_matches_query_result",
+              "definition_note_consistent"
+            ],
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "failed"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "error"
+        ]
+      }
+    }
+  ]
+}
