@@ -1,7 +1,8 @@
 # Documentation
 
-- [SemAlign 전체 실행](semalign-runtime.md): 외부 agent/v2·독립 반례 검수·온라인 탐지·새 채점.
-- [SemAlign 검증 기록](semalign-verification.md): fixture/fake/실제 모델 구분과 확인된 실패.
+- [SemAlign 최종 검토·검증 보고서](semalign-review-results.md): 데이터·설계 개선, 실제 모델 364건, 생성 품질·탐지 판정률과 재현 방법.
+- [SemAlign 전체 실행](semalign-runtime.md): 검수 정책·온라인 탐지·채점·인수 검증과 증적 재현.
+- [SemAlign 초기 검증 기록](semalign-verification.md): 개선 전 fixture/fake/실제 모델 소규모 실행과 확인된 실패.
 
 - [SemAlign data 연결](semalign-data.md): 구현된 입력 준비·새 계약·기존 실행과의 경계.
 - [SemAlign 채점기 설계안](semalign-design.md): data → SQL agent → benchmark 흐름의 전체 설계와 후속 단계.

@@ -1,6 +1,9 @@
 """Independent generation eligibility must not preselect detector-supported SQL."""
 
+import hashlib
+import json
 import re
+import runpy
 
 import pytest
 from fixtures.semalign_evaluation import MEANINGS, create_evaluation_source
@@ -11,7 +14,7 @@ from driftlens_benchmark.detectors.semalign import detect_semalign
 from driftlens_benchmark.evaluation.semalign import evaluate_semalign
 from driftlens_benchmark.semalign_runner import run_semalign
 from driftlens_benchmark.validation.generation import validate_generation
-from driftlens_benchmark.validation.references import probes, reference
+from driftlens_benchmark.validation.references import probes, reference, report
 
 
 def test_behavioral_eligibility_does_not_call_detector_extractors(tmp_path, monkeypatch):
@@ -114,7 +117,109 @@ def test_reference_does_not_ignore_unsupported_meaning_slots(tmp_path, slot, val
     )
     assert result["status"] == "unverified"
     assert result["checks"]["query_result_matches_reference"] is None
-    assert result["reasons"] == ["unsupported_reference_meaning"]
+    assert result["reasons"] == ["snapshot:reference:unsupported_reference_meaning"]
+
+
+@pytest.mark.parametrize("snapshot_fails", [False, True])
+def test_query_execution_error_is_attributed_to_its_actual_database(tmp_path, snapshot_fails):
+    source = create_evaluation_source(tmp_path / "source")
+    row = next(
+        r
+        for r in read_jsonl(source / "data/logs.L3.jsonl")
+        if r["referenced_concepts"] == ["sa_revenue_growth_wow"]
+    )
+    oracle = row["sql"]
+    value = row["reported_values"][0]
+    window = value["window"]
+    cases = {p.stem: p for p in probes(tmp_path / "probes", window)}
+    # This valid scalar on complete history incorrectly returns zero rows on
+    # incomplete history, rather than the required scalar NULL.
+    row["sql"] = (
+        f"SELECT * FROM ({oracle}) AS growth WHERE (SELECT MIN(ordered_at) FROM orders) "
+        f"<= (date('{window['start'][:10]}', '-7 days') || 'T00:00:00')"
+    )
+    snapshot_case, probe_case = (
+        ("incomplete_previous", "mixed") if snapshot_fails else ("mixed", "incomplete_previous")
+    )
+    meaning = MEANINGS["sa_revenue_growth_wow"]
+    expected = report(reference(cases[snapshot_case], meaning, window), "ratio")
+    value["value"] = expected
+    row["answer_text"] = "계산할 수 없습니다." if expected is None else f"결과는 {expected} ratio입니다."
+    result = validate_generation(
+        row,
+        meaning,
+        oracle,
+        cases[snapshot_case],
+        [cases[probe_case]],
+        mode="agent",
+        definition=row["definition_note"],
+        policy="behavioral",
+    )
+    assert result["status"] == "rejected"
+    assert result["checks"]["behavioral_agreement"] is False
+    assert result["checks"]["query_correct_for_used_definition"] is None
+    for check in (
+        "query_result_matches_reference",
+        "reported_value_matches_query_result",
+        "answer_matches_query_result",
+    ):
+        assert result["checks"][check] is (None if snapshot_fails else True)
+    assert result["counterexamples"] == [{"case": probe_case, "matched": snapshot_fails}]
+    stage = "snapshot" if snapshot_fails else "counterexample:incomplete_previous"
+    assert f"{stage}:query:non_scalar_query" in result["reasons"]
+
+
+def test_oracle_execution_failure_does_not_reject_the_response(tmp_path):
+    source = create_evaluation_source(tmp_path / "source")
+    row = read_jsonl(source / "data/logs.L3.jsonl")[0]
+    cid = row["referenced_concepts"][0]
+    result = validate_generation(
+        row,
+        MEANINGS[cid],
+        "SELECT 0 WHERE 0",
+        source / "data/jaffle.sqlite",
+        [],
+        mode="fixture",
+        definition=row["definition_note"],
+        policy="behavioral",
+    )
+    assert result["status"] == "unverified"
+    assert result["reasons"] == ["snapshot:oracle:non_scalar_query"]
+    assert all(value is None for value in result["checks"].values())
+
+
+def test_offline_validation_audit_preserves_inputs_and_rejects_hash_changes(tmp_path, root):
+    source = create_evaluation_source(tmp_path / "source")
+    run = tmp_path / "run"
+    run_semalign(source, run, validation_policy="behavioral", limit=7)
+    manifest = run / "private/manifest.json"
+    before = digest(manifest)
+    audit = runpy.run_path(str(root / "scripts/audit_semalign_validation.py"))["main"]
+    output, private = tmp_path / "audit.json", tmp_path / "audit-private"
+    assert audit(["--run", str(run), "--out", str(output), "--private-out", str(private)]) == 0
+    summary = read_json(output)
+    assert summary["rechecked_observations"] == 7
+    assert summary["status_changed_count"] == 0
+    assert summary["diagnostics_changed_count"] == 0
+    assert summary["model_api_calls"] == 0
+    assert summary["original_run_unchanged"] is True
+    assert digest(manifest) == before == summary["original_run_manifest_sha256"]
+    assert "log_id" not in output.read_text(encoding="utf-8")
+    details = read_jsonl(private / "validation-details.jsonl")
+    assert len(details) == 7
+    observation = read_jsonl(run / "private/attempts.jsonl")[0]["observation"]
+    assert details[0]["observation_sha256"] == hashlib.sha256(
+        json.dumps(observation, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False).encode("utf-8")
+    ).hexdigest()
+    with (run / "private/attempts.jsonl").open("a", encoding="utf-8") as stream:
+        stream.write("\n")
+    with pytest.raises(ValueError, match="audit_input_hash_mismatch"):
+        audit(
+            [
+                "--run", str(run), "--out", str(tmp_path / "tampered.json"),
+                "--private-out", str(tmp_path / "tampered-private"),
+            ]
+        )
 
 
 @pytest.mark.parametrize(

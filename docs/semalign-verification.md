@@ -1,6 +1,8 @@
-# SemAlign 검증 기록 — 2026-10-28
+# SemAlign 초기 검증 기록 — 2026-10-28
 
-이 문서는 개발용 검증 기록이다. 실제 모델 생성, 합성 source, 결정적 fake provider를 구분한다. 실제 관측·SQL·정답·API 키는 로컬의 Git 제외 `runs/`에 보존한다.
+이 문서는 **설계 재검토 전 초기 실행**의 기록이다. 아래 숫자는 6종 반례와 공유 의미 추출기를 사용한 당시 결과이며, 개선된 현재 코드의 인수 검증 결과가 아니다. 실제 모델 생성, 합성 source, 결정적 fake provider를 구분한다. 실제 관측·SQL·정답은 Git 제외 `runs/`에 보존하며 API 키를 결과에 기록하지 않는다.
+
+현재는 독립 `behavioral` 검수와 전주 시작 경계 3종을 추가했다. 정수 나눗셈·최초 주문 집계·전주 timestamp 비교도 보완했으므로 아래 통과 수와 점수를 현재 결과로 재사용하지 않는다. 최신 재현 절차와 해석은 [전체 실행 안내](semalign-runtime.md)를 따르고, 실행별 `execution.json`과 보고서에서 결과를 확인한다.
 
 ## 데이터와 실행 범위
 
@@ -12,7 +14,7 @@
 | 실제 companion + fake provider | 364 | 364 | 364 | 364 | 0 | 0 / 0 |
 | 실제 모델 `solar-pro4-260806` | 364 | 7 | 7 | 3 | 4 | 0 / 0 |
 
-실제 모델은 첫 주의 각 지표 한 건씩만 실행했다. 변경 후 정의, 전체 기간의 실제 모델 탐지 성능을 검증한 것은 아니다. 추가 실제 호출은 수행하지 않았다. 사용한 모델 ID·생성 설정·프롬프트/구현 hash는 해당 실행 manifest에 있다.
+이 초기 실행에서 실제 모델은 첫 주의 각 지표 한 건씩만 실행했다. 변경 후 정의, 전체 기간의 실제 모델 탐지 성능을 검증한 것은 아니다. 사용한 모델 ID·생성 설정·프롬프트/구현 hash는 해당 실행 manifest에 있다.
 
 ## 확인된 실패
 
@@ -30,7 +32,7 @@ source fixture의 semantic-combined 기준 L1/L3에서 LOG·T1·T2 F1은 1.0, L0
 
 실제 모델 소규모 검수 통과 3건에는 의미 변경 양성이 없다. 이 표본으로 실제 drift F1을 산출하거나 전체 모델 정확도를 추정하지 않는다.
 
-최종 6종 반례 검사에서도 source 330/364, companion fake 364/364가 유지됐다. 두 실행의 L0~L3를 각각 끝까지 탐지·채점했다. source L2의 LOG F1/coverage는 0.8451/0.5970, T1은 0.6452/0.4086, T2는 1.0/0.4다. companion fake는 364 관측·112쌍·7개 전체 시계열이 적격이며 L1~L3에서 일관성 F1=1.0이었다. 이 companion의 설명은 현재 profile을 그대로 기록하므로 L2의 일반화 평가로 사용할 수 없다.
+당시 6종 반례 검사에서 source 330/364, companion fake 364/364가 유지됐다. 두 실행의 L0~L3를 각각 끝까지 탐지·채점했다. source L2의 LOG F1/coverage는 0.8451/0.5970, T1은 0.6452/0.4086, T2는 1.0/0.4다. companion fake는 364 관측·112쌍·7개 전체 시계열이 적격이며 L1~L3에서 일관성 F1=1.0이었다. 이 companion의 설명은 현재 profile을 그대로 기록하므로 L2의 일반화 평가로 사용할 수 없다.
 
 로컬 근거: `runs/semalign-fixture-final`, `runs/semalign-companion-final`, `runs/semalign-live-smoke-01`과 각 `*-report-L*.json`. 최종 실행의 private manifest는 source·결과 파일 hash를 고정한다. SQL 형태별 품질 집계 필드가 추가되기 전 실행에는 그 집계가 null일 수 있으며, 원본 실행 기록을 사후 수정하지 않는다.
 
@@ -38,13 +40,13 @@ source fixture의 semantic-combined 기준 L1/L3에서 LOG·T1·T2 F1은 1.0, L0
 
 원격 Linux 통합 실행에서 Python 경로의 symlink를 실제 파일로 바꾸면 venv 대신 기본 인터프리터가 선택되는 문제가 드러났다. 호출자가 지정한 절대 경로를 그대로 사용하도록 수정했다. 이 회귀는 새 semalign-companion CI의 실제 외부 프로세스 테스트로 검사한다.
 
-확인 결과: benchmark 전체 157 passed / 1 skipped, SQL-agent 단위 테스트 55 passed, Ruff 통과. skip은 Windows symlink 권한 조건이다. 이후 수치 진단의 초기 4개 보정값만 있는 경우를 abstain으로 보완하고 관련 20개 테스트를 재확인했다. 두 wheel 빌드와 별도 설치 경로에서 import를 확인했으며, benchmark JSON schema 31개·agent prompt 2개가 wheel에 포함되는지 검사했다. 설치 wheel의 capabilities도 v2와 7개 개념을 반환했다.
+당시 확인 결과: benchmark 전체 157 passed / 1 skipped, SQL-agent 단위 테스트 55 passed, Ruff 통과. skip은 Windows symlink 권한 조건이다. 이후 수치 진단의 초기 4개 보정값만 있는 경우를 abstain으로 보완하고 관련 20개 테스트를 재확인했다. 두 wheel 빌드와 별도 설치 경로에서 import를 확인했으며, benchmark JSON schema 31개·agent prompt 2개가 wheel에 포함되는지 검사했다. 설치 wheel의 capabilities도 v2와 7개 개념을 반환했다.
 
 ```powershell
 # benchmark: 기본 검증은 API 호출 없음
 $env:DRIFTLENS_SEMALIGN_AGENT_PYTHON = (Resolve-Path ../driftlens-sql-agent/.venv/Scripts/python.exe).Path
 .venv/Scripts/python.exe -m pytest -q
-.venv/Scripts/python.exe -m ruff check src tests examples
+.venv/Scripts/python.exe -m ruff check src tests examples scripts
 .venv/Scripts/python.exe -m build --wheel
 
 # SQL-agent 저장소에서
@@ -58,4 +60,4 @@ $env:DRIFTLENS_SEMALIGN_AGENT_PYTHON = (Resolve-Path ../driftlens-sql-agent/.ven
 
 ## 남아 있는 연구 범위
 
-자유로운 SQL/자연어의 완전한 의미 이해, 독립 검수와 보류 데이터 평가, OS 격리, 여러 번의 정의 변경, 미지 지표 일반화는 지원 범위 밖이다. 현재 SQL agent의 profile-rendered 설명은 L2를 쉽게 만들 수 있다. model-generated 설명을 평가하는 비교 실험은 별도 구현과 검수가 필요하다.
+자유로운 SQL/자연어의 완전한 의미 이해, 별도 검수자와 보류 데이터 평가, OS 격리, 여러 번의 정의 변경, 미지 지표 일반화는 지원 범위 밖이다. 현재 `behavioral` 검수는 독립 유한 사례의 일치까지 확인한다. SQL agent의 profile-rendered 설명은 L2를 쉽게 만들 수 있다. model-generated 설명을 평가하는 비교 실험은 별도 구현과 검수가 필요하다.

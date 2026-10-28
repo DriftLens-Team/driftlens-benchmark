@@ -11,7 +11,7 @@ Use the environment's Python for subsequent commands. On Windows it is `.venv/Sc
 
 ```text
 python -m pytest -q
-python -m ruff check src tests examples
+python -m ruff check src tests examples scripts
 python -m build --wheel
 ```
 
@@ -19,6 +19,6 @@ Core tests use an independent protocol test double. The `companion` test calls t
 
 SemAlign uses a separate `semalign-companion` CI job pinned to agent commit `001b65b34f4475c6d90059539020d884be2b099f`. For local integration, set `DRIFTLENS_SEMALIGN_AGENT_PYTHON` to a v2 agent environment's Python and run `pytest -q -m semalign_companion`. The test creates its own data and calls the external CLI with the fake provider; it does not import agent internals. The old companion pin remains in the C03 job. See [SemAlign runtime](docs/semalign-runtime.md).
 
-Cases require hand-calculated boundary expectations, reference SQL and a fixed-definition control. Preserve original case IDs. Contracts require positive/negative examples and compatibility notes. Generated databases, private labels, credentials and real run artifacts do not belong in Git.
+Cases require hand-calculated boundary expectations, reference SQL and a fixed-definition control. Preserve original case IDs. Contracts require positive/negative examples and compatibility notes. SemAlign validation changes must keep `structural` and `behavioral` policy metadata consistent across attempts, manifests and reports; unsupported independent references remain unverified. The [acceptance workflow](docs/semalign-runtime.md#전체-인수-검증과-증적) records tests and complete offline runs, with live calls only when `--live` is supplied. Generated databases, private labels, credentials and real run artifacts do not belong in Git.
 
 Keep PR descriptions focused on changed behavior and verification. Document unsupported syntax and unverified live-model behavior. See [case contribution](docs/adding-a-case.md) and [architecture](docs/architecture.md).

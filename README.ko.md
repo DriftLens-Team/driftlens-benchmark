@@ -8,7 +8,7 @@ C03 대형 주문의 기준을 2,000 → 3,000 cents로 바꾸는 변경군과, 
 
 SQLite DB 생성, 외부 SQL 에이전트 실행, 답변·쿼리 검수, 드리프트 탐지 및 채점을 수행합니다. 현재 C03 케이스와 L3 관측 형식을 지원합니다.
 
-SemAlign의 **7개 지표·L0~L3 생성, 검수, LOG/T1/온라인 T2 탐지와 채점**도 지원합니다. `run-semalign`, `detect-semalign`, `evaluate-semalign`은 외부 agent/v2와 연결하고 생성 오류·기권·부분 실행을 분리해 보고합니다. [실행 방법](docs/semalign-runtime.md), [입력 준비와 계약](docs/semalign-data.md), [검증 결과와 제한](docs/semalign-verification.md)을 참고하세요.
+SemAlign의 **7개 지표·L0~L3 생성, 검수, LOG/T1/온라인 T2 탐지와 채점**도 지원합니다. `run-semalign`, `detect-semalign`, `evaluate-semalign`은 외부 agent/v2와 연결하고 생성 오류·기권·부분 실행을 분리해 보고합니다. 기본 `structural` 검수는 탐지기와 의미 추출기를 공유하고, 선택 가능한 `behavioral` 검수는 독립적인 유한 사례의 결과 일치를 확인합니다. 어느 쪽도 임의 SQL 동치나 일반화 정확도를 증명하지 않습니다. [실행·인수 검증 방법](docs/semalign-runtime.md), [입력 준비와 계약](docs/semalign-data.md), [초기 검증 기록](docs/semalign-verification.md)을 참고하세요.
 
 ## 빠른 시작
 
@@ -58,7 +58,7 @@ fake provider에서 `sql-rules` 탐지기의 예상 결과는 TP=1, TN=3, FP=0, 
 
 에이전트에는 주간 snapshot과 현재 정의를 전달합니다. 탐지기는 공개 관측과 기준 정의를 읽고, 평가기가 비공개 정답을 결합합니다.
 
-로컬 실행에는 OS sandbox가 없습니다. SQL 검수는 기간과 금액 임계값이 있는 COUNT 쿼리를 지원하며, 그 밖의 표현은 미검증으로 처리합니다. [아키텍처](docs/architecture.md)를 참고하세요.
+로컬 실행에는 OS sandbox가 없습니다. 기존 C03 SQL 검수는 기간과 금액 임계값이 있는 COUNT 쿼리를 지원합니다. SemAlign의 집계·비율·이력 및 미지원 표현 처리는 [실행 안내](docs/semalign-runtime.md)를 참고하세요.
 
 ## 기여
 
