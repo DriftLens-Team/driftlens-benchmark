@@ -36,6 +36,8 @@ source fixture의 semantic-combined 기준 L1/L3에서 LOG·T1·T2 F1은 1.0, L0
 
 ## 재현 가능한 자동 검증
 
+원격 Linux 통합 실행에서 Python 경로의 symlink를 실제 파일로 바꾸면 venv 대신 기본 인터프리터가 선택되는 문제가 드러났다. 호출자가 지정한 절대 경로를 그대로 사용하도록 수정했다. 이 회귀는 새 semalign-companion CI의 실제 외부 프로세스 테스트로 검사한다.
+
 확인 결과: benchmark 전체 157 passed / 1 skipped, SQL-agent 단위 테스트 55 passed, Ruff 통과. skip은 Windows symlink 권한 조건이다. 이후 수치 진단의 초기 4개 보정값만 있는 경우를 abstain으로 보완하고 관련 20개 테스트를 재확인했다. 두 wheel 빌드와 별도 설치 경로에서 import를 확인했으며, benchmark JSON schema 31개·agent prompt 2개가 wheel에 포함되는지 검사했다. 설치 wheel의 capabilities도 v2와 7개 개념을 반환했다.
 
 ```powershell

@@ -45,7 +45,9 @@ def run_semalign(
         raise ValueError("invalid_request_limit")
     catalogs, baseline, catalog_hashes = load_meanings(source)
     ontologies = {v: concepts(yaml_file(source.root / f"ontology/{v}.yml")) for v in ("v1", "v2")}
-    command = [str(Path(agent_python or sys.executable).resolve()), "-m", "driftlens_sql_agent"]
+    # Resolving a POSIX venv's Python symlink selects the base interpreter and
+    # loses its installed companion. Preserve the caller's environment path.
+    command = [str(Path(agent_python or sys.executable).absolute()), "-m", "driftlens_sql_agent"]
     capabilities = None
     if mode == "agent":
         try:
