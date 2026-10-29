@@ -61,6 +61,37 @@ def test_full_pipeline_and_separate_meaning_scores(complete_run, tmp_path):
     assert r["LOG"]["micro"]["tn"] == 0
 
 
+@pytest.mark.parametrize("duplicate_arrivals", [False, True], ids=["unique", "duplicate"])
+def test_alarm_timing_uses_first_online_alarm_window(tmp_path, duplicate_arrivals):
+    source = create_evaluation_source(tmp_path / "source")
+    if duplicate_arrivals:
+        for level in ("L0", "L1", "L2", "L3"):
+            path = source / f"data/logs.{level}.jsonl"
+            rows = read_jsonl(path)
+            for row in rows:
+                row["timestamp"] = "2020-03-02T12:00:00"
+            jsonl(path, rows)
+    run, predictions = tmp_path / "run", tmp_path / "predictions"
+    result = run_semalign(source, run, mode="fixture")
+    assert result["status"] == "complete"
+    assert result["planned"] == result["attempted"] == result["validated"] == 56
+    detect_semalign(run / "public/L1", predictions, method="semantic-sql")
+    report = evaluate_semalign(run, predictions)
+    trace = read_jsonl(predictions / "online.jsonl")
+    timing = {item["concept_id"]: item for item in report["timing"]}
+    assert set(timing) == {"sa_food_orders", "sa_drink_orders", "sa_customers_active"}
+    for cid, item in timing.items():
+        entries = [entry for entry in trace if entry["concept_id"] == cid]
+        alarms = [entry for entry in entries if entry["prediction"]["decision"] == "change"]
+        assert [entry["step"] for entry in alarms] == [5, 6, 7]
+        first = alarms[0]["prediction"]
+        assert all(entry["prediction"] == first for entry in alarms)
+        assert first["estimated_change_at"] == "2020-02-03"
+        assert first["alarm_at"] == entries[5]["cutoff"]
+        assert item["alarm_delay_weeks"] == 1.0
+        assert item["arrival_delay_seconds"] == (0.0 if duplicate_arrivals else 604800.0)
+
+
 @pytest.mark.parametrize(
     "mutation",
     ["duplicate", "missing", "extra", "hidden_evidence", "future_evidence", "future_view", "unbound"],
