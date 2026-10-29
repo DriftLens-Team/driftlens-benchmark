@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "contract_version": {
+      "const": "detection/v2"
+    },
+    "detector": {
+      "type": "string",
+      "minLength": 1
+    },
+    "version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "level": {
+      "enum": [
+        "L0",
+        "L1",
+        "L2",
+        "L3"
+      ]
+    },
+    "public_manifest_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "mode": {
+      "const": "online"
+    },
+    "isolation": {
+      "const": "unisolated"
+    },
+    "settings": {
+      "type": "object",
+      "properties": {
+        "confirmation_weeks": {
+          "const": 2
+        }
+      },
+      "required": [
+        "confirmation_weeks"
+      ],
+      "additionalProperties": false
+    },
+    "implementation": {
+      "type": "object"
+    },
+    "files": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^[a-f0-9]{64}$"
+      },
+      "minProperties": 4
+    }
+  },
+  "required": [
+    "contract_version",
+    "detector",
+    "version",
+    "level",
+    "public_manifest_sha256",
+    "mode",
+    "isolation",
+    "settings",
+    "implementation",
+    "files"
+  ],
+  "additionalProperties": false
+}

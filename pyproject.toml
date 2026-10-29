@@ -26,7 +26,7 @@ driftlens_benchmark = ["contracts/**/*.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-markers = ["companion: requires the separately installed driftlens-sql-agent package"]
+markers = ["companion: requires the separately installed driftlens-sql-agent package", "semalign_companion: opt-in external agent/v2 interpreter, fake provider only"]
 
 [tool.ruff]
 line-length = 110

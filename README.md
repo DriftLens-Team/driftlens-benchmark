@@ -8,6 +8,8 @@ C03 changes the “large order” threshold from 2,000 to 3,000 cents while a pa
 
 The pipeline generates a SQLite database, runs an external SQL agent, validates its answers and queries, and scores drift predictions. It currently supports C03 and the L3 observation format.
 
+SemAlign also supports **seven metrics, L0–L3, private generation validation, LOG/T1 and online T2 evaluation**. `run-semalign`, `detect-semalign`, and `evaluate-semalign` connect an external agent/v2 while keeping generation failures, abstentions and incomplete runs visible. See [runtime and acceptance instructions](docs/semalign-runtime.md), [input contracts](docs/semalign-data.md), and [initial verification records](docs/semalign-verification.md). Default `structural` validation shares the detector's semantic extractor; opt-in `behavioral` validation uses independent finite-case agreement. Neither establishes general SQL equivalence or generalization accuracy.
+
 ## Quick start
 
 Python 3.11+ and Git are required. Run these PowerShell commands from the repository root. The first run uses the companion agent's fake model without credentials.
@@ -56,7 +58,7 @@ Reports appear under `runs/demo/reports/sql-rules/` as `report.md` and `metrics.
 
 The agent receives a weekly snapshot and the current definition. Detectors read public observations and the baseline; the evaluator joins private labels.
 
-Execution is local, without an OS sandbox. SQL validation supports COUNT queries with date ranges and amount thresholds; unsupported expressions are marked unverified. See [architecture](docs/architecture.md).
+Execution is local, without an OS sandbox. C03 SQL validation supports COUNT queries with date ranges and amount thresholds. For SemAlign aggregates, ratios, history and unsupported expressions, see [runtime instructions](docs/semalign-runtime.md).
 
 ## Contributing
 

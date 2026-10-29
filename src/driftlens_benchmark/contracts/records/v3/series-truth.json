@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "concept_id": {
+      "enum": [
+        "sa_food_orders",
+        "sa_drink_orders",
+        "sa_customers_active",
+        "sa_customers_new",
+        "sa_order_value_avg",
+        "sa_revenue_growth_wow",
+        "sa_tax_rate_avg"
+      ]
+    },
+    "planned_log_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+      },
+      "uniqueItems": true,
+      "minItems": 1
+    },
+    "eligible_log_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+      },
+      "uniqueItems": true
+    },
+    "complete": {
+      "type": "boolean"
+    },
+    "is_control": {
+      "type": "boolean"
+    },
+    "effective_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date"
+    },
+    "changed": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "concept_id",
+    "planned_log_ids",
+    "eligible_log_ids",
+    "complete",
+    "is_control",
+    "effective_at",
+    "changed"
+  ],
+  "additionalProperties": false
+}

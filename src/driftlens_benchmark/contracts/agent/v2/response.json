@@ -1,0 +1,241 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "request_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+        },
+        "status": {
+          "const": "ok"
+        },
+        "observation": {
+          "type": "object",
+          "properties": {
+            "sql": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 10000
+            },
+            "answer_text": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            "definition_note": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            "reported_values": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "result_id": {
+                    "const": "r1"
+                  },
+                  "concept_id": {
+                    "enum": [
+                      "sa_food_orders",
+                      "sa_drink_orders",
+                      "sa_customers_active",
+                      "sa_customers_new",
+                      "sa_order_value_avg",
+                      "sa_revenue_growth_wow",
+                      "sa_tax_rate_avg"
+                    ]
+                  },
+                  "type": {
+                    "const": "metric_value"
+                  },
+                  "value": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "unit": {
+                    "enum": [
+                      "count",
+                      "cents",
+                      "ratio"
+                    ]
+                  },
+                  "window": {
+                    "type": "object",
+                    "properties": {
+                      "start": {
+                        "type": "string",
+                        "format": "date-time",
+                        "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$"
+                      },
+                      "end": {
+                        "type": "string",
+                        "format": "date-time",
+                        "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$"
+                      }
+                    },
+                    "required": [
+                      "start",
+                      "end"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "as_of": {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$"
+                  }
+                },
+                "required": [
+                  "result_id",
+                  "concept_id",
+                  "type",
+                  "value",
+                  "unit",
+                  "window",
+                  "as_of"
+                ],
+                "additionalProperties": false,
+                "allOf": [
+                  {
+                    "if": {
+                      "properties": {
+                        "unit": {
+                          "const": "count"
+                        }
+                      }
+                    },
+                    "then": {
+                      "properties": {
+                        "value": {
+                          "type": [
+                            "integer",
+                            "null"
+                          ],
+                          "minimum": 0,
+                    "maximum": 9223372036854775807
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "if": {
+                      "properties": {
+                        "unit": {
+                          "const": "cents"
+                        }
+                      }
+                    },
+                    "then": {
+                      "properties": {
+                        "value": {
+                          "type": [
+                            "integer",
+                            "null"
+                          ]
+                        }
+                      }
+                    }
+                  }
+                ]
+              },
+              "minItems": 1,
+              "maxItems": 1
+            },
+            "referenced_concepts": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "sa_food_orders",
+                  "sa_drink_orders",
+                  "sa_customers_active",
+                  "sa_customers_new",
+                  "sa_order_value_avg",
+                  "sa_revenue_growth_wow",
+                  "sa_tax_rate_avg"
+                ]
+              },
+              "minItems": 1,
+              "maxItems": 1
+            }
+          },
+          "required": [
+            "sql",
+            "answer_text",
+            "definition_note",
+            "reported_values",
+            "referenced_concepts"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "request_id",
+        "status",
+        "observation"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "request_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "const": "error"
+        },
+        "error": {
+          "type": "object",
+          "properties": {
+            "code": {
+              "enum": [
+                "invalid_request",
+                "unsupported_request",
+                "model_auth_failed",
+                "model_request_failed",
+                "model_timeout",
+                "invalid_action",
+                "sql_error",
+                "answer_validation_failed",
+                "turn_limit",
+                "request_timeout",
+                "protocol_error",
+                "duplicate_request_id",
+                "request_limit"
+              ]
+            },
+            "message": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            }
+          },
+          "required": [
+            "code",
+            "message"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "request_id",
+        "status",
+        "error"
+      ],
+      "additionalProperties": false
+    }
+  ]
+}

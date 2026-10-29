@@ -6,7 +6,7 @@ from importlib.resources import files
 
 from jsonschema import Draft202012Validator, FormatChecker, validators
 
-from ..artifacts import strict_json
+from ..artifacts import encoded, strict_json
 
 StrictValidator = validators.extend(
     Draft202012Validator,
@@ -24,6 +24,8 @@ def validator(name):
 
 
 def validate(name, value):
+    # Direct Python callers must obey the same finite-number rule as parsed JSON.
+    encoded(value)
     if not validator(name).is_valid(value):
         raise ValueError("invalid_contract:" + name)
     return value

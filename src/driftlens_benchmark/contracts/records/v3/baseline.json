@@ -1,0 +1,195 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "contract_version": {
+      "const": "records/v3"
+    },
+    "definitions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "concept_id": {
+            "enum": [
+              "sa_food_orders",
+              "sa_drink_orders",
+              "sa_customers_active",
+              "sa_customers_new",
+              "sa_order_value_avg",
+              "sa_revenue_growth_wow",
+              "sa_tax_rate_avg"
+            ]
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1
+          },
+          "definition": {
+            "type": "string",
+            "minLength": 1
+          },
+          "unit": {
+            "enum": [
+              "count",
+              "cents",
+              "ratio"
+            ]
+          },
+          "semantics": {
+            "type": "object",
+            "properties": {
+              "grain": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "aggregation": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "population": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "measure": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "conditions": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "time_semantics": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "null_policy": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "unit": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              }
+            },
+            "required": [
+              "grain",
+              "aggregation",
+              "population",
+              "measure",
+              "conditions",
+              "time_semantics",
+              "null_policy",
+              "unit"
+            ],
+            "additionalProperties": false
+          },
+          "required_slots": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "grain",
+                "aggregation",
+                "population",
+                "measure",
+                "conditions",
+                "time_semantics",
+                "null_policy",
+                "unit"
+              ]
+            },
+            "uniqueItems": true,
+            "minItems": 8,
+            "maxItems": 8
+          }
+        },
+        "required": [
+          "concept_id",
+          "label",
+          "definition",
+          "unit"
+        ],
+        "additionalProperties": false,
+        "dependentRequired": {
+          "semantics": [
+            "required_slots"
+          ],
+          "required_slots": [
+            "semantics"
+          ]
+        }
+      },
+      "minItems": 7,
+      "maxItems": 7
+    },
+    "schema": {
+      "const": {
+        "orders": {
+          "primary_key": "order_id",
+          "non_null": [
+            "order_id",
+            "customer_id",
+            "ordered_at",
+            "location_id",
+            "subtotal_cents",
+            "tax_paid_cents",
+            "order_total_cents"
+          ],
+          "amount_identity": "order_total_cents=subtotal_cents+tax_paid_cents"
+        },
+        "order_items": {
+          "primary_key": "order_item_id",
+          "non_null": [
+            "order_item_id",
+            "order_id",
+            "product_id"
+          ],
+          "foreign_keys": [
+            "order_id=orders.order_id",
+            "product_id=products.product_id"
+          ]
+        },
+        "products": {
+          "primary_key": "product_id",
+          "non_null": [
+            "product_id",
+            "product_type"
+          ]
+        }
+      }
+    },
+    "period": {
+      "type": "object",
+      "properties": {
+        "start": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T00:00:00Z$"
+        },
+        "end": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T00:00:00Z$"
+        }
+      },
+      "required": [
+        "start",
+        "end"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "contract_version",
+    "definitions"
+  ],
+  "additionalProperties": false
+}
