@@ -314,6 +314,7 @@ def evaluate_semalign(run_path, prediction_path, *, allow_partial=False, out=Non
     if len(trace) != len(rows):
         raise ValueError("online_trace_coverage")
     trace_by_concept = {cid: [] for cid in groups}
+    first_alarm_log_ids = {}
     for t in trace:
         if t["concept_id"] not in groups:
             raise ValueError("online_trace_concept")
@@ -352,6 +353,7 @@ def evaluate_semalign(run_path, prediction_path, *, allow_partial=False, out=Non
                 if p["alarm_at"] != t["cutoff"]:
                     raise ValueError("online_alarm_submission_time")
                 first_alarm = p
+                first_alarm_log_ids[cid] = lid
             if first_alarm is not None and p != first_alarm:
                 raise ValueError("online_first_alarm_rewritten")
         final = predictions["series"][cid]
@@ -421,9 +423,7 @@ def evaluate_semalign(run_path, prediction_path, *, allow_partial=False, out=Non
                 date.fromisoformat(p["estimated_change_at"]) - date.fromisoformat(t["effective_at"])
             ).days / 7
             hit = abs(error) <= 2
-            alarm_row = next(
-                by_id[lid] for lid in t["eligible_log_ids"] if by_id[lid]["timestamp"] == p["alarm_at"]
-            )
+            alarm_row = by_id[first_alarm_log_ids[cid]]
             first = min(
                 by_id[lid]["timestamp"] for lid in t["eligible_log_ids"] if by_id[lid]["semantic_drift"]
             )

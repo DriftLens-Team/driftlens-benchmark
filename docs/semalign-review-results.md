@@ -148,3 +148,23 @@ L2·L3의 정의 설명은 호스트가 현재 profile에서 기록한 정본 �
 현재 지원하는 7개 지표의 개발·회귀 검증에 사용할 수 있다. 실제 모델의 음식 주문·성장률 생성 품질과 SQL 탐지기의 판정률은 추가 개선 대상이다. 개발에 사용하지 않은 SQL·설명·시나리오와 독립 검수자를 확보하기 전에는 범용 정확도를 주장하지 않는다. 외부 제출을 평가할 때 필요한 OS 수준의 격리는 이번 범위에 포함하지 않았다.
 
 검토 중인 변경: [data #1](https://github.com/DriftLens-Team/driftlens-data/pull/1), [SQL agent #19](https://github.com/DriftLens-Team/driftlens-sql-agent/pull/19), [benchmark #1](https://github.com/DriftLens-Team/driftlens-benchmark/pull/1). 모두 병합 전 PR이다.
+
+## 8. 2026-10-29 pstack 오류 수정 재검증
+
+동일한 질문·도착 시각을 여러 주차에 사용할 때 경보 지연이 잘못 계산되는 오류를 수정했다. 검수 통과한 56개 관측에서 경보는 정의 변경 다음 주에 발생했지만, 채점기가 같은 시각의 첫 번째 과거 로그를 선택해 `alarm_delay_weeks=-4.0`을 기록했다.
+
+이제 온라인 추적 검증에서 최초 경보의 `log_id`를 보존하고 그 관측의 주차로 지연을 계산한다. 시각 중복은 계속 허용한다. 공개 입출력 형식, 최초 경보 고정, 미래 증거 거부, 불완전한 시계열 제외와 도착 시각 기준 지연은 유지한다.
+
+동일·서로 다른 시각의 대조 검사를 먼저 추가했다. 기존 코드는 동일 시각 사례에서 실패했고, 수정 후 변경하지 않은 원래 재현은 `alarm_delay_weeks=1.0`으로 통과했다. 별도 검토자가 같은 경보 시각에 최초 경보 단계가 5·6·7인 세 개념을 실행하여 지연 1·2·3주를 확인했다. 이 독립 검토의 9개 검사는 모두 통과했으며 확인된 추가 결함은 없었다.
+
+전체 benchmark 테스트는 183개 통과, Windows 심볼릭 링크 생성 환경 제약 1개 제외다. Ruff와 wheel 빌드가 통과했다. 별도 최신 SQL agent 환경을 지정해 실제 JSONL 프로세스의 모의 제공자 통합도 실행했다. 연계 agent의 날짜 리터럴 수정은 60개 테스트, data는 10개 테스트가 통과하여 합계 253개 통과다. subtest와 별도 검토 실험을 이 합계에 더하지 않는다.
+
+기존 실제 모델 실행의 L1 예측을 수정된 평가기로 다시 채점해 LOG·T1·T2 점수와 경보 지연이 유지됨을 확인했다. 이 검증은 저장 관측의 재채점이며, 새로운 실제 모델 응답이나 일반화 성능 검증이 아니다.
+
+```powershell
+$env:DRIFTLENS_SEMALIGN_AGENT_PYTHON='../driftlens-sql-agent/.venv/Scripts/python.exe'
+.venv/Scripts/python.exe -m pytest -q tests/e2e/test_semalign_pipeline.py -k alarm_timing
+.venv/Scripts/python.exe -m pytest -q
+.venv/Scripts/python.exe -m ruff check src tests examples scripts
+.venv/Scripts/python.exe -m build --wheel
+```
